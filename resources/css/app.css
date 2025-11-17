@@ -1,0 +1,1276 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Estilos customizados para o To Do List */
+
+/* Paleta de cores RezenDo */
+:root {
+    --color-primary: #fb9e0b;
+    --color-secondary: #fc6c04;
+    --color-accent: #fbe20d;
+    --color-dark: #212121;
+    --color-light: #ece7dd;
+}
+
+/* Background do body - Moderno com gradiente RezenDo */
+.custom-bg {
+    background: 
+        /* Padrão decorativo sutil */
+        radial-gradient(circle at 20% 30%, rgba(251, 158, 11, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(252, 108, 4, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(251, 226, 13, 0.05) 0%, transparent 50%),
+        /* Gradiente base elegante */
+        linear-gradient(135deg, #ece7dd 0%, #f5f0e5 50%, #ece7dd 100%);
+    background-attachment: fixed;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Padrão decorativo moderno */
+.custom-bg::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        /* Formas decorativas */
+        radial-gradient(circle at 10% 20%, rgba(251, 158, 11, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(252, 108, 4, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 10%, rgba(251, 226, 13, 0.08) 0%, transparent 35%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Garantir que o conteúdo fique acima do fundo decorativo */
+body > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Header moderno com gradiente */
+.header-bg {
+    background: linear-gradient(135deg, #212121 0%, #2a2a2a 50%, #212121 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.header-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #fb9e0b 0%, #fbe20d 50%, #fc6c04 100%);
+}
+
+/* Header com Post-its Decorativos */
+.header-with-postits {
+    position: relative;
+    padding: 3rem 2rem;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.header-postits-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.decorative-postit {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 0.25rem;
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.15),
+        0 1px 2px rgba(0, 0, 0, 0.1);
+    opacity: 0.6;
+    animation: floatPostit 6s ease-in-out infinite;
+}
+
+/* Cores e posições dos post-its decorativos */
+.postit-1 {
+    background: linear-gradient(135deg, #d4f4dd 0%, #c8f0d3 100%);
+    border-left: 3px solid #10b981;
+    top: 10%;
+    left: 5%;
+    transform: rotate(-8deg);
+    animation-delay: 0s;
+}
+
+.postit-2 {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-left: 3px solid #f59e0b;
+    top: 20%;
+    right: 8%;
+    transform: rotate(12deg);
+    animation-delay: 1s;
+}
+
+.postit-3 {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-left: 3px solid #ef4444;
+    bottom: 15%;
+    left: 10%;
+    transform: rotate(-15deg);
+    animation-delay: 2s;
+}
+
+.postit-4 {
+    background: linear-gradient(135deg, #d4f4dd 0%, #c8f0d3 100%);
+    border-left: 3px solid #10b981;
+    bottom: 20%;
+    right: 12%;
+    transform: rotate(8deg);
+    animation-delay: 0.5s;
+}
+
+.postit-5 {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-left: 3px solid #f59e0b;
+    top: 50%;
+    left: 2%;
+    transform: rotate(-5deg);
+    animation-delay: 1.5s;
+}
+
+.postit-6 {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-left: 3px solid #ef4444;
+    top: 60%;
+    right: 5%;
+    transform: rotate(10deg);
+    animation-delay: 2.5s;
+}
+
+@keyframes floatPostit {
+    0%, 100% {
+        transform: translateY(0) rotate(var(--rotation, 0deg));
+    }
+    50% {
+        transform: translateY(-10px) rotate(calc(var(--rotation, 0deg) + 2deg));
+    }
+}
+
+.postit-1 {
+    --rotation: -8deg;
+}
+
+.postit-2 {
+    --rotation: 12deg;
+}
+
+.postit-3 {
+    --rotation: -15deg;
+}
+
+.postit-4 {
+    --rotation: 8deg;
+}
+
+.postit-5 {
+    --rotation: -5deg;
+}
+
+.postit-6 {
+    --rotation: 10deg;
+}
+
+/* Responsividade do header com post-its */
+@media (max-width: 768px) {
+    .header-with-postits {
+        padding: 2rem 1rem;
+        min-height: 150px;
+    }
+    
+    .decorative-postit {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .postit-1 {
+        left: 2%;
+        top: 5%;
+    }
+    
+    .postit-2 {
+        right: 3%;
+        top: 10%;
+    }
+    
+    .postit-3 {
+        left: 5%;
+        bottom: 10%;
+    }
+    
+    .postit-4 {
+        right: 8%;
+        bottom: 15%;
+    }
+    
+    .postit-5 {
+        left: 1%;
+        top: 40%;
+    }
+    
+    .postit-6 {
+        right: 2%;
+        top: 50%;
+    }
+}
+
+@media (max-width: 640px) {
+    .header-with-postits {
+        padding: 1.5rem 0.5rem;
+        min-height: 120px;
+    }
+    
+    .decorative-postit {
+        width: 50px;
+        height: 50px;
+        opacity: 0.5;
+    }
+}
+
+/* Botão primário moderno */
+.custom-btn-primary {
+    background: linear-gradient(135deg, #fb9e0b 0%, #fc6c04 100%);
+    color: #212121;
+    font-weight: 600;
+    border: none;
+    box-shadow: 0 4px 15px rgba(251, 158, 11, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.custom-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.custom-btn-primary:hover::before {
+    left: 100%;
+}
+
+.custom-btn-primary:hover,
+.custom-btn-hover {
+    background: linear-gradient(135deg, #fc6c04 0%, #fb9e0b 100%);
+    box-shadow: 0 6px 20px rgba(251, 158, 11, 0.4);
+    transform: translateY(-2px);
+}
+
+.custom-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(251, 158, 11, 0.3);
+}
+
+/* Foco do input com cores da marca */
+.custom-focus:focus {
+    border-color: #fb9e0b;
+    box-shadow: 0 0 0 3px rgba(251, 158, 11, 0.2);
+}
+
+/* Contadores de caracteres dentro dos campos */
+#charCount, #descCount {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* Garantir que os contadores fiquem visíveis mesmo com texto digitado */
+input:focus ~ #charCount,
+textarea:focus ~ #descCount {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* Botões de prioridade modernos */
+.priority-btn {
+    background: #ece7dd;
+    color: #212121;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(33, 33, 33, 0.1);
+}
+
+.priority-btn:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 33, 33, 0.15);
+}
+
+.priority-btn.active {
+    box-shadow: 0 4px 15px rgba(251, 158, 11, 0.3);
+}
+
+.priority-simple {
+    color: #10b981;
+}
+
+.priority-simple.active {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.priority-medium {
+    color: #fb9e0b;
+}
+
+.priority-medium.active {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #fb9e0b;
+    color: #d97706;
+}
+
+.priority-urgent {
+    color: #fc6c04;
+}
+
+.priority-urgent.active {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #fc6c04;
+    color: #dc2626;
+}
+
+/* Card principal moderno */
+.main-card-bg {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(236, 231, 221, 0.8) 50%, 
+        rgba(255, 255, 255, 0.95) 100%);
+    box-shadow: 
+        0 10px 40px rgba(33, 33, 33, 0.1),
+        0 2px 10px rgba(251, 158, 11, 0.1);
+    border: 2px solid rgba(251, 158, 11, 0.15);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.main-card-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #fb9e0b 0%, #fbe20d 50%, #fc6c04 100%);
+}
+
+/* Checkbox quando completado */
+.custom-checkbox-completed {
+    background: linear-gradient(135deg, #fbe20d 0%, #fb9e0b 100%);
+    border-color: #fb9e0b;
+}
+
+.custom-checkbox-completed:hover {
+    background: linear-gradient(135deg, #fb9e0b 0%, #fc6c04 100%);
+    border-color: #fc6c04;
+}
+
+.text-dark-check {
+    color: #212121;
+}
+
+/* Animações suaves */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.main-card-bg {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Melhorias nos inputs */
+input[type="text"],
+input[type="date"],
+textarea {
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(33, 33, 33, 0.2);
+}
+
+input[type="text"]:hover,
+textarea:hover {
+    border-color: rgba(251, 158, 11, 0.4);
+    background: rgba(255, 255, 255, 1);
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(251, 158, 11, 0.15);
+}
+
+/* Estilos para a Modal de Todas as Tarefas - Visual de Prancheta */
+.all-todos-modal {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    background: linear-gradient(135deg, #e8e3d3 0%, #d4c9b0 50%, #c9b89a 100%);
+}
+
+.all-todos-modal.hidden {
+    display: none;
+}
+
+.all-todos-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 40;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.all-todos-container {
+    position: relative;
+    z-index: 50;
+    width: 100%;
+    max-width: 100%;
+    padding: 1rem 0.5rem;
+}
+
+.all-todos-content {
+    background: 
+        /* Textura de madeira */
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(139, 115, 85, 0.1) 2px,
+            rgba(139, 115, 85, 0.1) 4px
+        ),
+        /* Gradiente base marrom claro (madeira) */
+        linear-gradient(135deg, #d4b896 0%, #c9a882 50%, #b8956a 100%);
+    border: 8px solid #8b7555;
+    border-radius: 0.5rem;
+    box-shadow: 
+        /* Sombra da prancheta */
+        0 25px 50px -12px rgba(0, 0, 0, 0.4),
+        /* Sombra interna */
+        inset 0 2px 4px rgba(0, 0, 0, 0.1),
+        /* Brilho superior */
+        inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+    animation: slideDown 0.3s ease-out;
+    max-height: calc(100vh - 2rem);
+    min-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+    padding: 1.5rem;
+    padding-top: 3rem;
+}
+
+/* Clipe superior da prancheta */
+.all-todos-content::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 20px;
+    background: linear-gradient(135deg, #6b5d4f 0%, #8b7555 50%, #6b5d4f 100%);
+    border-radius: 4px;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1);
+    z-index: 1;
+}
+
+/* Área de papel dentro da prancheta */
+.clipboard-paper {
+    background-color: #faf9f6;
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.05),
+        0 1px 2px rgba(0, 0, 0, 0.1);
+    margin-top: -1.5rem;
+    position: relative;
+    z-index: 2;
+    min-height: calc(100vh - 6rem);
+}
+
+/* Linhas de caderno na área de papel */
+.clipboard-paper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 3rem;
+    right: 0;
+    bottom: 0;
+    background-image: repeating-linear-gradient(
+        transparent,
+        transparent 1.5rem,
+        rgba(0, 0, 0, 0.03) 1.5rem,
+        rgba(0, 0, 0, 0.03) calc(1.5rem + 1px)
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Margem vermelha no papel */
+.clipboard-paper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    width: 2px;
+    bottom: 0;
+    background-color: #ef4444;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Garantir que o conteúdo apareça sobre as linhas */
+.clipboard-paper > * {
+    position: relative;
+    z-index: 10;
+}
+
+/* Filtros da modal modernos */
+.all-todos-filter-btn {
+    background: #ece7dd;
+    color: #212121;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(33, 33, 33, 0.1);
+}
+
+.all-todos-filter-btn:hover {
+    background: rgba(251, 158, 11, 0.15);
+    color: #fc6c04;
+    border-color: rgba(251, 158, 11, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(251, 158, 11, 0.2);
+}
+
+.all-todos-filter-btn.active {
+    background: linear-gradient(135deg, #fb9e0b 0%, #fc6c04 100%);
+    color: #212121;
+    font-weight: 600;
+    border-color: #fc6c04;
+    box-shadow: 0 4px 15px rgba(251, 158, 11, 0.3);
+}
+
+/* Scrollbar customizada para a lista de todas as tarefas */
+#allTodosList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#allTodosList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#allTodosList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+#allTodosList::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Toast de Notificação */
+.toast-notification {
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+    border-left: 4px solid #047857;
+    z-index: 9999;
+}
+
+.toast-notification.toast-show {
+    opacity: 1;
+}
+
+.toast-notification.hidden {
+    display: none;
+}
+
+/* Toast de Erro */
+.toast-notification.toast-error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+    border-left-color: #b91c1c;
+}
+
+/* Toast de Aviso */
+.toast-notification.toast-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+    border-left-color: #b45309;
+}
+
+/* Responsividade do Toast */
+@media (max-width: 640px) {
+    .toast-notification {
+        top: 1rem !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        min-width: auto;
+        max-width: none;
+        transform: translateX(0) translateY(-100px);
+        width: calc(100% - 2rem);
+    }
+    
+    .toast-notification.toast-show {
+        transform: translateX(0) translateY(0);
+    }
+}
+
+/* Post-its Mini (tamanho real) */
+.post-it-mini-wrapper {
+    width: 100%;
+}
+
+.post-it-mini {
+    width: 100%;
+    min-height: 128px;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+    transform: rotate(var(--rotation, 0deg));
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Aplicar cores dos post-its originais aos mini */
+.post-it-mini.post-it-simple {
+    background: linear-gradient(135deg, #d4f4dd 0%, #c8f0d3 100%);
+    border-left: 3px solid #10b981;
+}
+
+.post-it-mini.post-it-medium {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-left: 3px solid #f59e0b;
+}
+
+.post-it-mini.post-it-urgent {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-left: 3px solid #ef4444;
+}
+
+.post-it-mini.post-it-completed {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+    border-left: 3px solid #9ca3af !important;
+    opacity: 0.7;
+}
+
+.post-it-mini:nth-child(5n+1) {
+    --rotation: -1.5deg;
+}
+
+.post-it-mini:nth-child(5n+2) {
+    --rotation: 0.5deg;
+}
+
+.post-it-mini:nth-child(5n+3) {
+    --rotation: -0.8deg;
+}
+
+.post-it-mini:nth-child(5n+4) {
+    --rotation: 1.2deg;
+}
+
+.post-it-mini:nth-child(5n+5) {
+    --rotation: -0.5deg;
+}
+
+.post-it-mini:hover {
+    transform: rotate(0deg) translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
+    z-index: 20;
+}
+
+/* Modal de Detalhes do Post-it */
+.post-it-detail-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.post-it-detail-modal.hidden {
+    display: none;
+}
+
+.post-it-detail-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 59;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.post-it-detail-container {
+    position: relative;
+    z-index: 60;
+    width: 100%;
+}
+
+.post-it-detail-content {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.post-it-detail-content.post-it-detail-show {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+.post-it-detail {
+    position: relative;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Post-its para Tarefas na Página de Listagem */
+.post-it-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.post-it-task {
+    position: relative;
+    min-height: 200px;
+    max-height: 400px;
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    cursor: default;
+    transform-origin: center;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.post-it-task:hover {
+    transform: rotate(0deg) translateY(-6px) scale(1.02) !important;
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.2),
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    z-index: 10;
+}
+
+/* Cores por prioridade */
+.post-it-task.post-it-simple {
+    background: linear-gradient(135deg, #d4f4dd 0%, #c8f0d3 50%, #b8e6c8 100%);
+    border-left: 4px solid #10b981;
+    border-top: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.post-it-task.post-it-medium {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+    border-left: 4px solid #f59e0b;
+    border-top: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.post-it-task.post-it-urgent {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #fca5a5 100%);
+    border-left: 4px solid #ef4444;
+    border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.post-it-task.post-it-completed {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 50%, #d1d5db 100%) !important;
+    border-left: 4px solid #9ca3af !important;
+    border-top: 1px solid rgba(156, 163, 175, 0.2) !important;
+    opacity: 0.75;
+    position: relative;
+}
+
+/* Carimbo de Tarefa Concluída */
+.completed-stamp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    z-index: 20;
+    pointer-events: none;
+    animation: stampAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.stamp-text {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #dc2626;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-shadow: 
+        2px 2px 0px rgba(0, 0, 0, 0.1),
+        0 0 10px rgba(220, 38, 38, 0.3);
+    border: 4px dashed #dc2626;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    transform: rotate(-5deg);
+    opacity: 0.95;
+}
+
+@keyframes stampAppear {
+    0% {
+        transform: translate(-50%, -50%) rotate(-15deg) scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) rotate(-12deg) scale(1.1);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(-15deg) scale(1);
+        opacity: 0.95;
+    }
+}
+
+/* Conteúdo do post-it */
+.post-it-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.post-it-title-wrapper {
+    flex-shrink: 0;
+    max-height: 60px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.5rem;
+    margin-right: -0.5rem;
+}
+
+.post-it-title-wrapper::-webkit-scrollbar {
+    width: 4px;
+}
+
+.post-it-title-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+.post-it-title-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.post-it-title-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.post-it-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.4;
+    word-break: break-word;
+    display: block;
+}
+
+.post-it-description-wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0.5rem 0;
+    max-height: 150px;
+    padding-right: 0.5rem;
+    margin-right: -0.5rem;
+}
+
+.post-it-description-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.post-it-description-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+.post-it-description-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.post-it-description-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.post-it-description {
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin: 0;
+    line-height: 1.5;
+    word-break: break-word;
+    display: block;
+}
+
+.post-it-date {
+    flex-shrink: 0;
+}
+
+.post-it-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    accent-color: #10b981;
+    flex-shrink: 0;
+}
+
+.post-it-priority-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+
+.post-it-priority-badge.post-it-priority-simple {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #059669;
+}
+
+.post-it-priority-badge.post-it-priority-medium {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #d97706;
+}
+
+.post-it-priority-badge.post-it-priority-urgent {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #dc2626;
+}
+
+/* Botões do post-it */
+.post-it-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    z-index: 5;
+    position: relative;
+}
+
+.post-it-btn {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.post-it-btn-edit {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.post-it-btn-edit:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.post-it-btn-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.post-it-btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Botões de Filtro */
+.filter-btn {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border: 2px solid transparent !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #fb9e0b 0%, #fc6c04 100%) !important;
+    color: white !important;
+    border-color: #fb9e0b !important;
+    box-shadow: 0 2px 4px rgba(251, 158, 11, 0.3) !important;
+}
+
+/* Botão de Apagar Todas as Concluídas */
+.delete-all-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: white !important;
+    border: 2px solid transparent !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: auto;
+}
+
+.delete-all-btn:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
+    transform: translateY(-1px);
+}
+
+.delete-all-btn.hidden {
+    display: none !important;
+}
+
+/* Garantir que o botão seja visível quando não estiver oculto */
+.delete-all-btn:not(.hidden) {
+    display: block !important;
+}
+
+/* Responsividade dos post-its */
+@media (max-width: 768px) {
+    .post-it-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .post-it-task {
+        min-height: 180px;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .post-it-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .post-it-task {
+        min-height: 160px;
+        padding: 0.875rem;
+    }
+    
+    .post-it-title {
+        font-size: 1rem;
+    }
+    
+    .post-it-description {
+        font-size: 0.8125rem;
+    }
+    
+    .stamp-text {
+        font-size: 1.75rem;
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Modal de Edição */
+.edit-modal-content {
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    margin: 1rem auto;
+}
+
+.edit-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.edit-modal-content::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.edit-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(33, 33, 33, 0.2);
+    border-radius: 10px;
+}
+
+.edit-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(33, 33, 33, 0.3);
+}
+
+/* Responsividade do Modal de Edição */
+@media (max-width: 640px) {
+    .edit-modal-content {
+        max-height: calc(100vh - 1rem);
+        margin: 0.5rem auto;
+        border-radius: 0.5rem;
+    }
+    
+    #editModal .flex {
+        padding: 0.75rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+}
+
+/* Responsividade para post-its mini */
+@media (max-width: 640px) {
+    #allTodosList {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .post-it-mini {
+        min-height: 120px;
+    }
+    
+    .custom-bg {
+        background-attachment: scroll;
+    }
+    
+    .all-todos-modal {
+        padding-top: 0;
+        padding-bottom: 0;
+        background: linear-gradient(135deg, #d4c9b0 0%, #c9b89a 100%);
+    }
+    
+    .all-todos-container {
+        padding: 0.5rem;
+    }
+    
+    .all-todos-content {
+        border-radius: 0;
+        max-height: 100vh;
+        min-height: 100vh;
+        padding: 1rem;
+        padding-top: 2.5rem;
+        border: 4px solid #8b7555;
+    }
+    
+    .all-todos-content::before {
+        width: 120px;
+        height: 16px;
+        top: -8px;
+    }
+    
+    .clipboard-paper {
+        padding: 1rem;
+        margin-top: -1rem;
+        min-height: calc(100vh - 4rem);
+    }
+    
+    .clipboard-paper::before {
+        left: 2.5rem;
+    }
+    
+    .clipboard-paper::after {
+        left: 1.5rem;
+    }
+    
+    .toast-notification {
+        top: 1rem !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        min-width: auto;
+        max-width: none;
+        transform: translateX(0) translateY(-100px);
+        width: calc(100% - 2rem);
+    }
+    
+    .toast-notification.toast-show {
+        transform: translateX(0) translateY(0);
+    }
+}
+
+/* Telas grandes - modal ainda maior */
+@media (min-width: 1280px) {
+    .all-todos-content {
+        max-width: 1700px !important;
+    }
+}
+
+@media (min-width: 1536px) {
+    .all-todos-content {
+        max-width: 1900px !important;
+    }
+}

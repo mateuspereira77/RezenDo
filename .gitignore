@@ -1,0 +1,55 @@
+# Arquivos de ambiente e configuração
+.env
+.env.backup
+.env.production
+.env.*.local
+
+# Dependências
+/vendor
+/node_modules
+
+# Arquivos de build e cache
+/public/build
+/public/hot
+/public/storage
+/bootstrap/cache/*
+!bootstrap/cache/.gitignore
+
+# Storage e logs
+/storage/*.key
+/storage/pail
+/storage/logs/*
+*.log
+
+# Arquivos de teste e cache
+.phpunit.result.cache
+/.phpunit.cache
+/.phpunit.cache/*
+.phpunit.cache
+coverage/
+
+# Arquivos de IDE
+/.fleet
+/.idea
+/.nova
+/.phpactor.json
+/.vscode
+/.zed
+*.swp
+*.swo
+*~
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+*.cache
+
+# Arquivos de configuração específicos
+/auth.json
+Homestead.json
+Homestead.yaml
+phpunit.xml.bak
+
+# Arquivos temporários
+*.tmp
+*.bak
