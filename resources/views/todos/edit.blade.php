@@ -142,10 +142,83 @@
     <script>
         // Script específico para a página de edição
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded - Inicializando página de edição');
+            
             const editForm = document.getElementById('editTodoForm');
             const todoId = document.getElementById('todoId')?.value;
             
-            if (!editForm || !todoId) return;
+            console.log('Formulário encontrado:', editForm);
+            console.log('Todo ID encontrado:', todoId);
+            console.log('Axios disponível:', typeof window.axios !== 'undefined');
+            
+            if (!editForm) {
+                console.error('Erro: Formulário de edição não encontrado');
+                return;
+            }
+            
+            if (!todoId) {
+                console.error('Erro: ID da tarefa não encontrado');
+                return;
+            }
+            
+            if (typeof window.axios === 'undefined') {
+                console.error('Erro: axios não está disponível. Verifique se o JavaScript foi carregado corretamente.');
+                alert('Erro: Sistema não inicializado. Recarregue a página.');
+                return;
+            }
+            
+            // Garantir que o CSRF token está configurado
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken.content;
+                console.log('CSRF token configurado:', csrfToken.content.substring(0, 10) + '...');
+            } else {
+                console.warn('CSRF token não encontrado no meta tag');
+            }
+            
+            // Configurar headers padrão
+            window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+            window.axios.defaults.headers.common['Accept'] = 'application/json';
+            
+            // Configurar interceptor de requisição para debug
+            window.axios.interceptors.request.use(
+                function (config) {
+                    console.log('Interceptor REQUEST: Requisição sendo enviada', config);
+                    console.log('URL:', config.url);
+                    console.log('Method:', config.method);
+                    console.log('Data:', config.data);
+                    console.log('Headers:', config.headers);
+                    return config;
+                },
+                function (error) {
+                    console.error('Interceptor REQUEST: Erro ao configurar requisição', error);
+                    return Promise.reject(error);
+                }
+            );
+            
+            // Configurar interceptor de resposta para debug
+            window.axios.interceptors.response.use(
+                function (response) {
+                    console.log('Interceptor RESPONSE: Resposta recebida com sucesso', response);
+                    console.log('Status:', response.status);
+                    console.log('Data:', response.data);
+                    return response;
+                },
+                function (error) {
+                    console.error('Interceptor RESPONSE: Erro na resposta', error);
+                    if (error.response) {
+                        console.error('Status:', error.response.status);
+                        console.error('Data:', error.response.data);
+                        console.error('Headers:', error.response.headers);
+                    } else if (error.request) {
+                        console.error('Requisição feita mas sem resposta:', error.request);
+                        console.error('Request config:', error.config);
+                    } else {
+                        console.error('Erro ao configurar requisição:', error.message);
+                    }
+                    return Promise.reject(error);
+                }
+            );
             
             // Aplicar máscara de data brasileira
             const todoDate = document.getElementById('todoDate');
@@ -219,6 +292,25 @@
             
             editForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('Formulário de edição submetido');
+                
+                const todoId = document.getElementById('todoId').value;
+                console.log('Todo ID:', todoId);
+                
+                if (!todoId) {
+                    console.error('Erro: ID da tarefa não encontrado');
+                    showToast('Erro: ID da tarefa não encontrado.', 'error');
+                    return false;
+                }
+                
+                // Verificar se axios está disponível - aguardar um pouco se necessário
+                if (typeof window.axios === 'undefined') {
+                    console.error('Erro: axios não está disponível');
+                    showToast('Erro: Sistema não inicializado. Recarregue a página.', 'error');
+                    return false;
+                }
                 
                 // Função para converter data brasileira para ISO (suporta DD/MM/YY e DD/MM/YYYY)
                 function convertBRToISO(dateBR) {
@@ -294,11 +386,49 @@
                 if (dateValue === 'INVALID') {
                     showToast('Por favor, insira uma data válida no formato DD/MM/AAAA ou DD/MM/AA.', 'error');
                     if (todoDate) todoDate.focus();
-                    return;
+                    return false;
+                }
+                
+                console.log('Enviando dados:', formData);
+                
+                // Desabilitar botão de submit para evitar duplo clique
+                const submitBtn = editForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Salvando...';
                 }
                 
                 try {
-                    const response = await window.axios.put(`/api/todos/${todoId}`, formData);
+                    console.log('Fazendo requisição PUT para:', `/api/todos/${todoId}`);
+                    console.log('Headers do axios:', window.axios.defaults.headers);
+                    console.log('FormData sendo enviado:', JSON.stringify(formData));
+                    
+                    // Criar a promise da requisição
+                    const requestPromise = window.axios.put(`/api/todos/${todoId}`, formData, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        timeout: 10000, // 10 segundos de timeout
+                        validateStatus: function (status) {
+                            return status >= 200 && status < 500; // Aceitar qualquer status < 500
+                        }
+                    });
+                    
+                    console.log('Promise criada, aguardando resposta...');
+                    
+                    // Adicionar timeout manual para debug
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => {
+                            reject(new Error('Timeout: Requisição demorou mais de 10 segundos'));
+                        }, 10000);
+                    });
+                    
+                    const response = await Promise.race([requestPromise, timeoutPromise]);
+                    
+                    console.log('Resposta recebida:', response);
+                    console.log('Status:', response.status);
+                    console.log('Data:', response.data);
                     
                     showToast('Tarefa atualizada com sucesso!');
                     
@@ -315,47 +445,106 @@
                     }, 1000);
                 } catch (error) {
                     console.error('Erro ao atualizar tarefa:', error);
-                    showToast('Erro ao atualizar tarefa. Tente novamente.', 'error');
+                    console.error('Tipo do erro:', error.constructor.name);
+                    console.error('Mensagem do erro:', error.message);
+                    
+                    if (error.response) {
+                        console.error('Resposta do erro:', error.response);
+                        console.error('Status do erro:', error.response.status);
+                        console.error('Data do erro:', error.response.data);
+                        console.error('Headers do erro:', error.response.headers);
+                    } else if (error.request) {
+                        console.error('Requisição feita mas sem resposta:', error.request);
+                    } else {
+                        console.error('Erro ao configurar requisição:', error.message);
+                    }
+                    
+                    // Reabilitar botão de submit
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Salvar Alterações';
+                    }
+                    
+                    // Tratar erros de validação do Laravel
+                    if (error.response && error.response.status === 422) {
+                        const errors = error.response.data.errors;
+                        let errorMessages = [];
+                        
+                        if (errors) {
+                            Object.keys(errors).forEach(field => {
+                                if (Array.isArray(errors[field])) {
+                                    errorMessages.push(...errors[field]);
+                                } else {
+                                    errorMessages.push(errors[field]);
+                                }
+                            });
+                        }
+                        
+                        if (errorMessages.length > 0) {
+                            showToast(errorMessages.join(' '), 'error');
+                        } else {
+                            showToast('Erro de validação. Verifique os campos preenchidos.', 'error');
+                        }
+                    } else if (error.response && error.response.data && error.response.data.message) {
+                        showToast('Erro: ' + error.response.data.message, 'error');
+                    } else {
+                        showToast('Erro ao atualizar tarefa. Tente novamente.', 'error');
+                    }
                 }
             });
         });
         
         // Funções de toast (mesmas do todos.js)
         function showToast(message, type = 'success') {
-            const toast = document.getElementById('toastNotification');
-            const toastMessage = document.getElementById('toastMessage');
-            
-            if (!toast || !toastMessage) return;
-            
-            toastMessage.textContent = message;
-            toast.classList.remove('toast-error', 'toast-warning');
-            
-            if (type === 'error') {
-                toast.classList.add('toast-error');
-            } else if (type === 'warning') {
-                toast.classList.add('toast-warning');
+            try {
+                const toast = document.getElementById('toastNotification');
+                const toastMessage = document.getElementById('toastMessage');
+                
+                if (!toast || !toastMessage) {
+                    console.warn('Toast elements not found, using alert instead');
+                    alert(message);
+                    return;
+                }
+                
+                toastMessage.textContent = message;
+                
+                // Remover classes de cor anteriores
+                if (toast && toast.classList) {
+                    toast.classList.remove('bg-green-500', 'bg-red-500', 'bg-yellow-500');
+                    
+                    // Adicionar classe de cor baseada no tipo
+                    if (type === 'error') {
+                        toast.classList.add('bg-red-500');
+                    } else if (type === 'warning') {
+                        toast.classList.add('bg-yellow-500');
+                    } else {
+                        toast.classList.add('bg-green-500');
+                    }
+                    
+                    toast.classList.remove('hidden');
+                    
+                    // Esconder após 3 segundos
+                    setTimeout(() => {
+                        if (toast && toast.classList) {
+                            toast.classList.add('hidden');
+                        }
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Erro ao mostrar toast:', error);
+                alert(message);
             }
-            
-            toast.classList.remove('hidden');
-            void toast.offsetWidth;
-            
-            setTimeout(() => {
-                toast.classList.add('toast-show');
-            }, 10);
-            
-            setTimeout(() => {
-                hideToast();
-            }, 4000);
         }
         
         function hideToast() {
-            const toast = document.getElementById('toastNotification');
-            if (!toast) return;
-            
-            toast.classList.remove('toast-show');
-            setTimeout(() => {
+            try {
+                const toast = document.getElementById('toastNotification');
+                if (!toast || !toast.classList) return;
+                
                 toast.classList.add('hidden');
-            }, 400);
+            } catch (error) {
+                console.error('Erro ao esconder toast:', error);
+            }
         }
         
         window.hideToast = hideToast;

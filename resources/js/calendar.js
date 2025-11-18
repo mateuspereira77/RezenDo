@@ -399,7 +399,7 @@ function createWeekDayElement(date) {
     const holidayName = holidaysCache[year][dateKey];
     const isHoliday = !!holidayName;
     
-    let classes = 'min-h-[400px] p-3 border rounded-lg';
+    let classes = 'min-h-[400px] max-h-[600px] p-3 border rounded-lg flex flex-col';
     
     if (isHoliday) {
         classes += ' border-2 border-orange-600 bg-orange-50';
@@ -412,12 +412,18 @@ function createWeekDayElement(date) {
     dayDiv.className = classes;
     
     const dayHeader = document.createElement('div');
-    dayHeader.className = 'mb-3 pb-2 border-b';
+    dayHeader.className = 'mb-3 pb-2 border-b cursor-pointer hover:bg-gray-100 rounded px-2 py-1 transition-colors';
+    dayHeader.onclick = () => {
+        openDayModal(date, dayTodos);
+    };
+    
+    const headerContent = document.createElement('div');
+    headerContent.className = 'day-header-content';
     
     const dayName = document.createElement('div');
     dayName.className = 'text-sm font-medium text-gray-600';
     dayName.textContent = weekDays[date.getDay()];
-    dayHeader.appendChild(dayName);
+    headerContent.appendChild(dayName);
     
     const dayNumberWrapper = document.createElement('div');
     dayNumberWrapper.className = 'flex items-center justify-between';
@@ -436,20 +442,21 @@ function createWeekDayElement(date) {
         dayNumberWrapper.appendChild(holidayBadge);
     }
     
-    dayHeader.appendChild(dayNumberWrapper);
+    headerContent.appendChild(dayNumberWrapper);
     
     // Nome do feriado abaixo do número
     if (isHoliday) {
         const holidayLabel = document.createElement('div');
         holidayLabel.className = 'text-xs font-semibold text-orange-700 mt-1';
         holidayLabel.textContent = holidayName;
-        dayHeader.appendChild(holidayLabel);
+        headerContent.appendChild(holidayLabel);
     }
     
+    dayHeader.appendChild(headerContent);
     dayDiv.appendChild(dayHeader);
     
     const todosContainer = document.createElement('div');
-    todosContainer.className = 'space-y-2';
+    todosContainer.className = 'space-y-2 overflow-y-auto flex-1 min-h-0';
     
     if (dayTodos.length === 0) {
         const emptyElement = document.createElement('div');
@@ -479,7 +486,7 @@ function createTodoBadge(todo) {
     
     const color = priorityColors[todo.priority] || priorityColors.simple;
     
-    let badgeClasses = `text-xs px-2 py-1 rounded border ${color} truncate`;
+    let badgeClasses = `text-xs px-2 py-1 rounded border ${color} truncate cursor-pointer hover:shadow-md transition-shadow`;
     if (todo.completed) {
         badgeClasses += ' opacity-60 line-through';
     }
@@ -487,6 +494,12 @@ function createTodoBadge(todo) {
     badge.className = badgeClasses;
     badge.textContent = todo.text;
     badge.title = todo.text + (todo.completed ? ' (Concluída)' : '');
+    
+    // Adicionar evento de clique para abrir modal de detalhes
+    badge.onclick = (e) => {
+        e.stopPropagation(); // Prevenir que abra o modal do dia
+        openTodoDetailModal(todo);
+    };
     
     return badge;
 }
@@ -502,19 +515,26 @@ function createTodoCard(todo) {
     
     const color = priorityColors[todo.priority] || priorityColors.simple;
     
-    card.className = `p-2 rounded border-l-4 ${color} hover:shadow-md transition-shadow`;
+    // Altura máxima e overflow para manter proporção
+    card.className = `p-2 rounded border-l-4 ${color} hover:shadow-md transition-shadow max-h-32 overflow-hidden flex flex-col`;
     
     const header = document.createElement('div');
-    header.className = 'flex items-start justify-between mb-1';
+    header.className = 'flex items-start justify-between mb-1 flex-shrink-0';
     
     const title = document.createElement('div');
-    title.className = `font-semibold text-sm flex-1 ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'}`;
+    title.className = `font-semibold text-sm flex-1 min-w-0 ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'}`;
+    title.style.overflow = 'hidden';
+    title.style.textOverflow = 'ellipsis';
+    title.style.display = '-webkit-box';
+    title.style.webkitLineClamp = '2';
+    title.style.webkitBoxOrient = 'vertical';
     title.textContent = todo.text;
+    title.title = todo.text; // Tooltip com texto completo
     header.appendChild(title);
     
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.className = 'ml-2 flex-shrink-0';
+    checkbox.className = 'ml-2 flex-shrink-0 mt-0.5';
     checkbox.checked = todo.completed;
     checkbox.onchange = (e) => {
         e.stopPropagation();
@@ -524,15 +544,21 @@ function createTodoCard(todo) {
     
     card.appendChild(header);
     
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'flex-1 min-h-0 overflow-hidden';
+    
     if (todo.description) {
         const desc = document.createElement('div');
         desc.className = `text-xs text-gray-600 mt-1 line-clamp-2 ${todo.completed ? 'line-through text-gray-400' : ''}`;
         desc.textContent = todo.description;
-        card.appendChild(desc);
+        desc.title = todo.description; // Tooltip com descrição completa
+        contentWrapper.appendChild(desc);
     }
     
+    card.appendChild(contentWrapper);
+    
     const actions = document.createElement('div');
-    actions.className = 'flex gap-1 mt-2';
+    actions.className = 'flex gap-1 mt-2 flex-shrink-0';
     
     const editBtn = document.createElement('button');
     editBtn.className = 'text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors';
@@ -544,6 +570,17 @@ function createTodoCard(todo) {
     actions.appendChild(editBtn);
     
     card.appendChild(actions);
+    
+    // Abrir modal de detalhes ao clicar no card (mas não nos botões)
+    card.onclick = (e) => {
+        // Se clicou em um botão ou checkbox, não abrir o modal
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('input')) {
+            e.stopPropagation();
+            return;
+        }
+        e.stopPropagation(); // Prevenir que abra o modal do dia
+        openTodoDetailModal(todo);
+    };
     
     return card;
 }
@@ -581,6 +618,43 @@ function updateViewButtons() {
     }
 }
 
+// Abrir modal de detalhes de uma tarefa específica
+function openTodoDetailModal(todo) {
+    const modal = document.getElementById('dayModal');
+    const title = document.getElementById('dayModalTitle');
+    const content = document.getElementById('dayModalContent');
+    
+    // Obter data da tarefa para o título
+    let dateStr = 'Sem data';
+    if (todo.date) {
+        let dateValue = todo.date;
+        if (typeof dateValue === 'string' && dateValue.includes('T')) {
+            dateValue = dateValue.split('T')[0];
+        }
+        if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}/)) {
+            const [year, month, day] = dateValue.split('-');
+            const date = new Date(year, month - 1, day);
+            dateStr = date.toLocaleDateString('pt-BR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+    }
+    
+    title.textContent = `Detalhes da Tarefa - ${dateStr}`;
+    title.dataset.date = todo.date ? (typeof todo.date === 'string' && todo.date.includes('T') ? todo.date.split('T')[0] : todo.date) : '';
+    
+    content.innerHTML = '';
+    
+    // Criar card de detalhes da tarefa
+    const todoElement = createModalTodoCard(todo);
+    content.appendChild(todoElement);
+    
+    modal.classList.remove('hidden');
+}
+
 // Abrir modal de tarefas do dia
 function openDayModal(date, dayTodos) {
     const modal = document.getElementById('dayModal');
@@ -614,7 +688,19 @@ function openDayModal(date, dayTodos) {
     content.innerHTML = '';
     
     if (dayTodos.length === 0) {
-        content.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhuma tarefa para este dia.</p>';
+        // Formatar data no formato brasileiro para o link
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const dateBR = `${day}/${month}/${year}`;
+        const addTodoUrl = `/?date=${encodeURIComponent(dateBR)}`;
+        
+        content.innerHTML = `
+            <p class="text-gray-500 text-center py-8">
+                Nenhuma tarefa para este dia. 
+                <a href="${addTodoUrl}" class="text-blue-600 hover:underline">Crie uma nova tarefa aqui!</a>
+            </p>
+        `;
     } else {
         dayTodos.forEach(todo => {
             const todoElement = createModalTodoCard(todo);
@@ -729,15 +815,24 @@ async function toggleTodoCalendar(todoId) {
         // Se o modal estiver aberto, atualizar o conteúdo
         const modal = document.getElementById('dayModal');
         if (modal && !modal.classList.contains('hidden')) {
-            // Encontrar a data atual do modal
             const modalTitle = document.getElementById('dayModalTitle');
-            if (modalTitle && modalTitle.dataset.date) {
-                const dateKey = modalTitle.dataset.date;
-                // Converter string YYYY-MM-DD para Date
-                const [year, month, day] = dateKey.split('-').map(Number);
-                const date = new Date(year, month - 1, day);
-                const dayTodos = todosByDate[dateKey] || [];
-                openDayModal(date, dayTodos);
+            if (modalTitle) {
+                // Verificar se é modal de detalhes de uma tarefa específica
+                if (modalTitle.textContent.startsWith('Detalhes da Tarefa')) {
+                    // Atualizar modal de detalhes da tarefa
+                    const updatedTodo = todos.find(t => t.id === todoId);
+                    if (updatedTodo) {
+                        openTodoDetailModal(updatedTodo);
+                    }
+                } else if (modalTitle.dataset.date) {
+                    // Atualizar modal de tarefas do dia
+                    const dateKey = modalTitle.dataset.date;
+                    // Converter string YYYY-MM-DD para Date
+                    const [year, month, day] = dateKey.split('-').map(Number);
+                    const date = new Date(year, month - 1, day);
+                    const dayTodos = todosByDate[dateKey] || [];
+                    openDayModal(date, dayTodos);
+                }
             }
         }
         

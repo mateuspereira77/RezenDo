@@ -64,15 +64,4 @@ class UpdateTodoRequest extends FormRequest
             'priority.in' => 'A prioridade deve ser: Simples, Média ou Urgente.',
         ];
     }
-
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        // Se date vier como string vazia, definir como null explicitamente
-        if ($this->has('date') && $this->input('date') === '') {
-            $this->merge(['date' => null]);
-        }
-    }
 }

@@ -9,6 +9,7 @@ const todoForm = document.getElementById('todoForm');
 const todosList = document.getElementById('todosList');
 const todoText = document.getElementById('todoText');
 const todoDescription = document.getElementById('todoDescription');
+const todoDate = document.getElementById('todoDate');
 
 // Função para formatar data no padrão brasileiro (DD/MM/YYYY)
 function formatDateBR(dateString) {
@@ -289,6 +290,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Aplicar máscara de data brasileira em todos os campos de data
     const dateInputs = document.querySelectorAll('input[type="text"][data-date-mask]');
     dateInputs.forEach(input => applyDateMask(input));
+    
+    // Pré-preencher data se houver parâmetro na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    if (dateParam && todoDate) {
+        todoDate.value = dateParam;
+    }
     
     // Só carregar tarefas se estiver na página de listagem
     if (todosList && window.location.pathname === '/minhas-tarefas') {
@@ -739,8 +747,16 @@ async function updateTodo(id) {
 
 // Iniciar edição
 function startEdit(id) {
+    console.log('startEdit chamado com ID:', id);
+    
+    if (!id) {
+        console.error('Erro: ID da tarefa não fornecido');
+        return;
+    }
+    
     // Redirecionar para página de edição na mesma aba
     const editUrl = `/todos/${id}/edit`;
+    console.log('Redirecionando para:', editUrl);
     window.location.href = editUrl;
 }
 
