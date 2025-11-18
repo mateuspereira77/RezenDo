@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTodoRequest;
 use App\Http\Requests\UpdateTodoRequest;
 use App\Models\Todo;
+use App\Models\User;
+use App\Notifications\SharedTodoEditedNotification;
 use App\Notifications\TodoAssignedNotification;
 use App\Notifications\TodoCompletedNotification;
+use App\Notifications\TodoOwnerEditedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
@@ -89,12 +92,18 @@ class TodoController extends Controller
         $newAssignedToId = $newAssignedTo ? (int) $newAssignedTo : null;
 
         if ($newAssignedToId && $newAssignedToId !== $oldAssignedToId && $newAssignedToId !== auth()->id()) {
-            $assignedUser = \App\Models\User::find($newAssignedToId);
+            $assignedUser = User::find($newAssignedToId);
             if ($assignedUser) {
                 \Log::info('Enviando notificação para usuário:', ['user_id' => $assignedUser->id, 'user_name' => $assignedUser->name]);
                 $assignedUser->notify(new TodoAssignedNotification($todo));
             }
         }
+
+        // Notificar o dono da tarefa se alguém com quem ela foi compartilhada fez uma edição
+        $this->notifyTodoOwnerOnSharedEdit($todo);
+
+        // Notificar usuários com quem a tarefa foi compartilhada quando o dono edita
+        $this->notifySharedUsersOnOwnerEdit($todo);
 
         // Garantir que assigned_to seja sempre retornado, mesmo se null
         $responseData = $todo->toArray();
@@ -203,5 +212,93 @@ class TodoController extends Controller
             ->get();
 
         return response()->json($todos);
+    }
+
+    /**
+     * Notificar o dono da tarefa quando alguém com quem ela foi compartilhada fizer uma edição.
+     */
+    private function notifyTodoOwnerOnSharedEdit(Todo $todo): void
+    {
+        $editorId = auth()->id();
+        $todoOwnerId = $todo->user_id;
+
+        // Não notificar se o editor for o próprio dono da tarefa
+        if ($editorId === $todoOwnerId) {
+            return;
+        }
+
+        // Verificar se o editor tem acesso compartilhado à tarefa
+        if (! $todo->isSharedWith($editorId)) {
+            return;
+        }
+
+        try {
+            // Carregar relacionamentos necessários
+            $todo->load('user:id,name');
+            $todoOwner = User::find($todoOwnerId);
+
+            if ($todoOwner) {
+                $todoOwner->notify(new SharedTodoEditedNotification($todo));
+
+                \Log::info('Notificação de edição de tarefa compartilhada enviada ao dono', [
+                    'todo_owner_id' => $todoOwnerId,
+                    'editor_id' => $editorId,
+                    'todo_id' => $todo->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro ao enviar notificação de edição de tarefa compartilhada', [
+                'error' => $e->getMessage(),
+                'todo_owner_id' => $todoOwnerId,
+                'editor_id' => $editorId,
+                'todo_id' => $todo->id,
+            ]);
+        }
+    }
+
+    /**
+     * Notificar usuários com quem a tarefa foi compartilhada quando o dono edita.
+     */
+    private function notifySharedUsersOnOwnerEdit(Todo $todo): void
+    {
+        $editorId = auth()->id();
+        $todoOwnerId = $todo->user_id;
+
+        // Só notificar se o editor for o dono da tarefa
+        if ($editorId !== $todoOwnerId) {
+            return;
+        }
+
+        try {
+            // Carregar relacionamentos necessários
+            $todo->load('user:id,name');
+
+            // Buscar todos os usuários com quem a tarefa foi compartilhada
+            $sharedUsers = $todo->sharedWith()->get();
+
+            foreach ($sharedUsers as $sharedUser) {
+                try {
+                    $sharedUser->notify(new TodoOwnerEditedNotification($todo));
+
+                    \Log::info('Notificação de edição pelo dono enviada ao usuário compartilhado', [
+                        'shared_user_id' => $sharedUser->id,
+                        'todo_owner_id' => $todoOwnerId,
+                        'todo_id' => $todo->id,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao enviar notificação de edição pelo dono para usuário compartilhado', [
+                        'error' => $e->getMessage(),
+                        'shared_user_id' => $sharedUser->id,
+                        'todo_id' => $todo->id,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erro ao notificar usuários compartilhados sobre edição pelo dono', [
+                'error' => $e->getMessage(),
+                'todo_owner_id' => $todoOwnerId,
+                'todo_id' => $todo->id,
+            ]);
+        }
     }
 }

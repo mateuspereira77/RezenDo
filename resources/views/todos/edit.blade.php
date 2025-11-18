@@ -574,7 +574,16 @@
                 const formData = {
                     text: document.getElementById('todoText').value.trim(),
                     description: document.getElementById('todoDescription').value.trim() || null,
-                    priority: document.querySelector('input[name="priority"]:checked')?.value || 'simple',
+                    priority: (() => {
+                        const checkedPriority = document.querySelector('input[name="priority"]:checked');
+                        if (checkedPriority) {
+                            return checkedPriority.value;
+                        }
+                        // Se nenhum estiver marcado, usar a prioridade atual da tarefa ou 'simple'
+                        const currentPriority = '{{ $todo->priority ?? "simple" }}';
+                        console.warn('Nenhuma prioridade selecionada, usando prioridade atual:', currentPriority);
+                        return currentPriority;
+                    })(),
                     date: dateValue,
                     assigned_to: assignedToFinal,
                 };

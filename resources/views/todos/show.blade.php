@@ -105,14 +105,20 @@
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">💬 Comentários</h2>
             
             <!-- Formulário de Comentário -->
-            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
-                <textarea 
-                    id="commentContent" 
-                    rows="3"
-                    maxlength="1000"
-                    placeholder="Adicione um comentário..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none"
-                ></textarea>
+            <div class="mb-4 p-4 bg-gray-50 rounded-lg relative">
+                <div class="relative">
+                    <textarea 
+                        id="commentContent" 
+                        rows="3"
+                        maxlength="1000"
+                        placeholder="Adicione um comentário... (use @ para mencionar usuários)"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none"
+                    ></textarea>
+                    <!-- Dropdown de sugestões de usuários -->
+                    <div id="userSuggestions" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50" style="top: 100%; left: 0; margin-top: 5px; width: 100%; max-width: 100%;">
+                        <!-- Sugestões serão inseridas aqui -->
+                    </div>
+                </div>
                 <div class="flex justify-between items-center mt-2">
                     <span id="commentCounter" class="text-xs text-gray-500">0 / 1000 caracteres</span>
                     <button 
@@ -157,14 +163,18 @@
                             <label for="editCommentContent" class="block text-sm font-medium text-gray-700 mb-2">
                                 Comentário
                             </label>
-                            <textarea 
-                                id="editCommentContent" 
-                                rows="5"
-                                maxlength="1000"
-                                required
-                                placeholder="Digite seu comentário..."
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none"
-                            ></textarea>
+                            <div class="relative">
+                                <textarea 
+                                    id="editCommentContent" 
+                                    rows="5"
+                                    maxlength="1000"
+                                    required
+                                    placeholder="Digite seu comentário... (use @ para mencionar)"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none"
+                                ></textarea>
+                                <div id="edit-suggestions" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50" style="top: 100%; left: 0; margin-top: 5px; width: 100%; max-width: 100%;">
+                                </div>
+                            </div>
                             <div class="flex justify-end mt-1">
                                 <span id="editCommentCounter" class="text-xs text-gray-500">0 / 1000 caracteres</span>
                             </div>
@@ -270,9 +280,294 @@
                 commentContent.addEventListener('input', function() {
                     const length = this.value.length;
                     commentCounter.textContent = `${length} / 1000 caracteres`;
+                    
+                    // Detectar menções
+                    handleMentionDetection(this);
+                });
+                
+                // Detectar @ ao digitar
+                commentContent.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        hideUserSuggestions();
+                    }
                 });
             }
         }
+        
+        let mentionStartPos = -1;
+        let currentMentionQuery = '';
+        let selectedSuggestionIndex = -1;
+        
+        // Função para calcular a posição do cursor no textarea
+        function getCursorPosition(textarea, position) {
+            // Criar um elemento temporário para medir o texto
+            const div = document.createElement('div');
+            const style = getComputedStyle(textarea);
+            
+            // Copiar estilos do textarea
+            div.style.position = 'absolute';
+            div.style.visibility = 'hidden';
+            div.style.whiteSpace = 'pre-wrap';
+            div.style.wordWrap = 'break-word';
+            div.style.font = style.font;
+            div.style.fontSize = style.fontSize;
+            div.style.fontFamily = style.fontFamily;
+            div.style.fontWeight = style.fontWeight;
+            div.style.padding = style.padding;
+            div.style.border = style.border;
+            div.style.width = style.width;
+            div.style.boxSizing = style.boxSizing;
+            div.style.letterSpacing = style.letterSpacing;
+            div.style.textIndent = style.textIndent;
+            div.style.lineHeight = style.lineHeight;
+            
+            // Obter o texto até a posição do cursor
+            const text = textarea.value.substring(0, position);
+            const textLines = text.split('\n');
+            
+            // Calcular altura de cada linha
+            const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2;
+            const paddingTop = parseFloat(style.paddingTop) || 0;
+            const paddingLeft = parseFloat(style.paddingLeft) || 0;
+            
+            // Calcular posição X (horizontal)
+            const lastLine = textLines[textLines.length - 1];
+            div.textContent = lastLine || ' ';
+            document.body.appendChild(div);
+            const textWidth = div.offsetWidth;
+            document.body.removeChild(div);
+            
+            // Calcular posição Y (vertical)
+            const lineNumber = textLines.length - 1;
+            const y = lineNumber * lineHeight + paddingTop;
+            
+            return { x: textWidth + paddingLeft, y: y };
+        }
+        
+        // Função para posicionar o dropdown próximo ao cursor (não é mais necessária, mas mantida para compatibilidade)
+        function positionDropdownNearCursor(textarea, cursorPosition, suggestionsDiv) {
+            // Agora o dropdown está dentro do container do textarea com position: absolute
+            // Não precisa calcular posição, apenas garantir que está visível
+            if (suggestionsDiv) {
+                suggestionsDiv.style.position = 'absolute';
+                suggestionsDiv.style.top = '100%';
+                suggestionsDiv.style.left = '0';
+                suggestionsDiv.style.marginTop = '5px';
+                suggestionsDiv.style.width = '100%';
+                suggestionsDiv.style.maxWidth = '100%';
+            }
+        }
+        
+        function handleMentionDetection(textarea, suggestionsId = 'userSuggestions') {
+            if (!textarea) {
+                console.error('Textarea não encontrado');
+                return;
+            }
+            
+            const value = textarea.value;
+            const cursorPos = textarea.selectionStart;
+            
+            // Encontrar @ antes do cursor
+            const textBeforeCursor = value.substring(0, cursorPos);
+            const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+            
+            if (lastAtIndex !== -1) {
+                // Verificar se há espaço após o @ (se sim, não é uma menção)
+                const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+                if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+                    mentionStartPos = lastAtIndex;
+                    currentMentionQuery = textAfterAt;
+                    
+                    // Mostrar o dropdown (agora está dentro do container do textarea)
+                    const suggestionsDiv = document.getElementById(suggestionsId);
+                    if (suggestionsDiv && textarea) {
+                        suggestionsDiv.classList.remove('hidden');
+                        suggestionsDiv.style.display = 'block';
+                    } else {
+                        console.error('Dropdown ou textarea não encontrado:', { suggestionsDiv: !!suggestionsDiv, textarea: !!textarea });
+                    }
+                    
+                    searchUsers(currentMentionQuery, suggestionsId, textarea);
+                    return;
+                }
+            }
+            
+            hideUserSuggestions(suggestionsId);
+        }
+        
+        function searchUsers(query, suggestionsId = 'userSuggestions', textarea = null) {
+            if (!textarea) {
+                textarea = document.getElementById('commentContent');
+            }
+            
+            window.axios.get('/api/users/search', { params: { q: query || '' } })
+                .then(response => {
+                    showUserSuggestions(response.data, suggestionsId, textarea);
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar usuários:', error);
+                    hideUserSuggestions(suggestionsId);
+                });
+        }
+        
+        function showUserSuggestions(users, suggestionsId = 'userSuggestions', textarea = null) {
+            const suggestionsDiv = document.getElementById(suggestionsId);
+            if (!suggestionsDiv) {
+                console.error('Elemento de sugestões não encontrado:', suggestionsId);
+                return;
+            }
+            
+            if (users.length === 0) {
+                suggestionsDiv.classList.add('hidden');
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            // Garantir que o dropdown está visível
+            suggestionsDiv.style.display = 'block';
+            suggestionsDiv.classList.remove('hidden');
+            
+            // Função auxiliar para escapar HTML
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            suggestionsDiv.innerHTML = users.map((user, index) => {
+                const userName = escapeHtml(user.name);
+                const userEmail = escapeHtml(user.email);
+                const safeUserName = userName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                return `
+                    <div 
+                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer suggestion-item ${index === 0 ? 'bg-gray-50' : ''}"
+                        data-user-id="${user.id}"
+                        data-user-name="${safeUserName}"
+                        data-suggestions-id="${suggestionsId}"
+                        data-textarea-id="${textarea ? textarea.id : 'commentContent'}"
+                        onclick="handleUserSuggestionClick(this)"
+                        onmouseenter="highlightSuggestion(${index}, '${suggestionsId}')"
+                    >
+                        <div class="font-medium text-gray-800">${userName}</div>
+                        <div class="text-xs text-gray-500">${userEmail}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            suggestionsDiv.classList.remove('hidden');
+            suggestionsDiv.style.display = 'block';
+            selectedSuggestionIndex = 0;
+        }
+        
+        function hideUserSuggestions(suggestionsId = 'userSuggestions') {
+            const suggestionsDiv = document.getElementById(suggestionsId);
+            if (suggestionsDiv) {
+                suggestionsDiv.classList.add('hidden');
+                suggestionsDiv.style.display = 'none';
+            }
+            mentionStartPos = -1;
+            currentMentionQuery = '';
+            selectedSuggestionIndex = -1;
+        }
+        
+        function handleUserSuggestionClick(element) {
+            const userId = parseInt(element.getAttribute('data-user-id'));
+            const userName = element.getAttribute('data-user-name');
+            const suggestionsId = element.getAttribute('data-suggestions-id');
+            const textareaId = element.getAttribute('data-textarea-id');
+            
+            const textarea = document.getElementById(textareaId);
+            if (!textarea) {
+                console.error('Textarea não encontrado:', textareaId);
+                return;
+            }
+            
+            selectUserSuggestion(userId, userName, suggestionsId, textarea);
+        }
+        
+        function selectUserSuggestion(userId, userName, suggestionsId = 'userSuggestions', textarea = null) {
+            if (!textarea) {
+                textarea = document.getElementById('commentContent');
+            }
+            if (!textarea || mentionStartPos === -1) {
+                console.error('Textarea ou mentionStartPos inválido', { textarea: !!textarea, mentionStartPos });
+                return;
+            }
+            
+            const value = textarea.value;
+            const textBefore = value.substring(0, mentionStartPos);
+            const cursorPos = textarea.selectionStart;
+            const textAfter = value.substring(cursorPos);
+            
+            // Substituir a menção pelo nome do usuário
+            const newValue = textBefore + '@' + userName + ' ' + textAfter;
+            textarea.value = newValue;
+            
+            // Reposicionar cursor
+            const newCursorPos = mentionStartPos + userName.length + 2;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+            
+            // Atualizar contador se for o comentário principal
+            if (textarea.id === 'commentContent') {
+                const commentCounter = document.getElementById('commentCounter');
+                if (commentCounter) {
+                    commentCounter.textContent = `${newValue.length} / 1000 caracteres`;
+                }
+            }
+            
+            hideUserSuggestions(suggestionsId);
+        }
+        
+        function highlightSuggestion(index, suggestionsId = 'userSuggestions') {
+            const suggestionsDiv = document.getElementById(suggestionsId);
+            if (!suggestionsDiv) return;
+            
+            const items = suggestionsDiv.querySelectorAll('.suggestion-item');
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('bg-gray-50');
+                } else {
+                    item.classList.remove('bg-gray-50');
+                }
+            });
+            selectedSuggestionIndex = index;
+        }
+        
+        // Adicionar suporte a navegação por teclado
+        document.addEventListener('keydown', function(e) {
+            // Verificar todos os dropdowns de sugestões abertos
+            const allSuggestions = document.querySelectorAll('[id^="userSuggestions"], [id^="reply-suggestions"], #edit-suggestions');
+            let activeSuggestionsDiv = null;
+            
+            allSuggestions.forEach(div => {
+                if (!div.classList.contains('hidden')) {
+                    activeSuggestionsDiv = div;
+                }
+            });
+            
+            if (!activeSuggestionsDiv) return;
+            
+            const items = activeSuggestionsDiv.querySelectorAll('.suggestion-item');
+            if (items.length === 0) return;
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
+                items[selectedSuggestionIndex].scrollIntoView({ block: 'nearest' });
+                highlightSuggestion(selectedSuggestionIndex, activeSuggestionsDiv.id);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
+                items[selectedSuggestionIndex].scrollIntoView({ block: 'nearest' });
+                highlightSuggestion(selectedSuggestionIndex, activeSuggestionsDiv.id);
+            } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+                e.preventDefault();
+                const selectedItem = items[selectedSuggestionIndex];
+                handleUserSuggestionClick(selectedItem);
+            }
+        });
 
         function addComment() {
             const content = document.getElementById('commentContent').value.trim();
@@ -310,6 +605,25 @@
                             const div = document.createElement('div');
                             div.textContent = text;
                             return div.innerHTML;
+                        }
+                        
+                        // Função para processar menções no conteúdo
+                        function processMentions(content, mentions = []) {
+                            if (!mentions || mentions.length === 0) {
+                                return escapeHtml(content);
+                            }
+                            
+                            let processedContent = escapeHtml(content);
+                            
+                            // Destacar cada menção
+                            mentions.forEach(mention => {
+                                const mentionPattern = new RegExp(`@${escapeHtml(mention.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi');
+                                processedContent = processedContent.replace(mentionPattern, (match) => {
+                                    return `<span class="bg-yellow-100 text-yellow-800 font-medium px-1 rounded">${match}</span>`;
+                                });
+                            });
+                            
+                            return processedContent;
                         }
                         
                         listDiv.innerHTML = comments.map(comment => {
@@ -368,7 +682,7 @@
                                                     </div>
                                                 ` : ''}
                                             </div>
-                                            <div class="text-gray-700 text-sm whitespace-pre-wrap mb-2" id="comment-content-${reply.id}">${escapeHtml(reply.content)}</div>
+                                            <div class="text-gray-700 text-sm whitespace-pre-wrap mb-2" id="comment-content-${reply.id}">${processMentions(reply.content, reply.mentions || [])}</div>
                                             <input type="hidden" id="comment-original-${reply.id}" value="${escapeHtml(reply.content)}">
                                             
                                             <div class="flex items-center gap-4 mb-2">
@@ -378,7 +692,11 @@
                                             </div>
                                             
                                             <div id="reply-form-${reply.id}" class="hidden mt-2">
-                                                <textarea id="reply-content-${reply.id}" rows="2" maxlength="1000" placeholder="Digite sua resposta..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none text-sm"></textarea>
+                                                <div class="relative">
+                                                    <textarea id="reply-content-${reply.id}" rows="2" maxlength="1000" placeholder="Digite sua resposta... (use @ para mencionar)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none text-sm"></textarea>
+                                                    <div id="reply-suggestions-${reply.id}" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50" style="top: 100%; left: 0; margin-top: 5px; width: 100%; max-width: 100%;">
+                                                    </div>
+                                                </div>
                                                 <div class="flex gap-2 mt-2">
                                                     <button onclick="submitReply(${reply.id})" class="px-4 py-1.5 bg-gradient-to-r from-[#fb9e0b] to-[#fc6c04] text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
                                                         Enviar
@@ -414,7 +732,7 @@
                                             </div>
                                         ` : ''}
                                     </div>
-                                    <div class="text-gray-700 whitespace-pre-wrap mb-2" id="comment-content-${comment.id}">${escapeHtml(comment.content)}</div>
+                                    <div class="text-gray-700 whitespace-pre-wrap mb-2" id="comment-content-${comment.id}">${processMentions(comment.content, comment.mentions || [])}</div>
                                     <input type="hidden" id="comment-original-${comment.id}" value="${escapeHtml(comment.content)}">
                                     
                                     <div class="flex items-center gap-4 mb-2">
@@ -424,7 +742,11 @@
                                     </div>
                                     
                                     <div id="reply-form-${comment.id}" class="hidden mt-2">
-                                        <textarea id="reply-content-${comment.id}" rows="2" maxlength="1000" placeholder="Digite sua resposta..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none text-sm"></textarea>
+                                        <div class="relative">
+                                            <textarea id="reply-content-${comment.id}" rows="2" maxlength="1000" placeholder="Digite sua resposta... (use @ para mencionar)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none text-sm"></textarea>
+                                            <div id="reply-suggestions-${comment.id}" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50" style="top: 100%; left: 0; margin-top: 5px; width: 100%; max-width: 100%;">
+                                            </div>
+                                        </div>
                                         <div class="flex gap-2 mt-2">
                                             <button onclick="submitReply(${comment.id})" class="px-4 py-1.5 bg-gradient-to-r from-[#fb9e0b] to-[#fc6c04] text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
                                                 Enviar
@@ -461,9 +783,26 @@
             textarea.value = originalContent;
             updateEditCommentCounter();
             
+            // Adicionar listener para detecção de menções (remover listeners antigos primeiro)
+            const newTextarea = textarea.cloneNode(true);
+            textarea.parentNode.replaceChild(newTextarea, textarea);
+            const freshTextarea = document.getElementById('editCommentContent');
+            
+            freshTextarea.addEventListener('input', function() {
+                handleMentionDetection(this, 'edit-suggestions');
+            });
+            freshTextarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const suggestionsDiv = document.getElementById('edit-suggestions');
+                    if (suggestionsDiv) {
+                        suggestionsDiv.classList.add('hidden');
+                    }
+                }
+            });
+            
             // Mostrar modal
             document.getElementById('editCommentModal').classList.remove('hidden');
-            textarea.focus();
+            freshTextarea.focus();
         }
 
         function closeEditCommentModal() {
@@ -546,6 +885,20 @@
                 const textarea = document.getElementById(`reply-content-${commentId}`);
                 if (textarea) {
                     textarea.focus();
+                    
+                    // Verificar se já tem listeners (usando data attribute)
+                    if (!textarea.dataset.mentionListenerAdded) {
+                        // Adicionar listener para detecção de menções
+                        textarea.addEventListener('input', function() {
+                            handleMentionDetection(this, `reply-suggestions-${commentId}`);
+                        });
+                        textarea.addEventListener('keydown', function(e) {
+                            if (e.key === 'Escape') {
+                                hideUserSuggestions(`reply-suggestions-${commentId}`);
+                            }
+                        });
+                        textarea.dataset.mentionListenerAdded = 'true';
+                    }
                 }
             }
         }
@@ -629,6 +982,9 @@
         }
 
         window.hideToast = hideToast;
+        window.handleUserSuggestionClick = handleUserSuggestionClick;
+        window.selectUserSuggestion = selectUserSuggestion;
+        window.highlightSuggestion = highlightSuggestion;
     </script>
 </body>
 </html>

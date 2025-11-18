@@ -50,6 +50,15 @@ class Comment extends Model
     }
 
     /**
+     * Relacionamento com usuários mencionados no comentário.
+     */
+    public function mentions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'comment_mentions')
+            ->withTimestamps();
+    }
+
+    /**
      * Relacionamento com usuários que reagiram ao comentário.
      */
     public function reactions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

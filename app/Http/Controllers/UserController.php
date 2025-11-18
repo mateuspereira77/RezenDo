@@ -13,20 +13,24 @@ class UserController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
-        $query = $request->input('q', '');
+        $query = trim($request->input('q', ''));
 
-        if (strlen($query) < 2) {
-            return response()->json([]);
-        }
+        $usersQuery = User::where('id', '!=', auth()->id());
 
-        $users = User::where('id', '!=', auth()->id())
-            ->where(function ($q) use ($query) {
+        if (strlen($query) >= 1) {
+            $usersQuery->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('email', 'like', "%{$query}%");
-            })
+            });
+        }
+
+        $users = $usersQuery
             ->select('id', 'name', 'email')
+            ->orderBy('name')
             ->limit(10)
             ->get();
+
+        \Log::info('Busca de usuários', ['query' => $query, 'count' => $users->count()]);
 
         return response()->json($users);
     }

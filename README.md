@@ -163,6 +163,12 @@ Se preferir usar Docker:
   - Indicador visual discreto para identificar respostas
   - Contador de caracteres em tempo real (máximo 1000 caracteres)
   - Permissões: apenas o autor pode editar, autor ou dono da tarefa podem excluir
+  - **Sistema de Menções (@usuario)**
+    - Menções de usuários em comentários usando @nome
+    - Dropdown de sugestões ao digitar @
+    - Suporte a nomes compostos
+    - Notificações automáticas para usuários mencionados
+    - Destaque visual de menções nos comentários
 
 - ✅ **Sistema de Autenticação**
   - Login e registro de usuários
@@ -172,26 +178,41 @@ Se preferir usar Docker:
 
 - ✅ **Sistema de Notificações**
   - Notificações em tempo real no navegador
-  - Notificações automáticas quando uma tarefa é atribuída a você
-  - Notificações quando uma tarefa atribuída a você é concluída
   - Contador de notificações não lidas
   - Dropdown de notificações com histórico
   - Marcar notificações como lidas individualmente ou em lote
-  - Integração com sistema de atribuição de tarefas
+  - **Notificações de Atribuição**
+    - Notificações automáticas quando uma tarefa é atribuída a você
+    - Notificações quando uma tarefa atribuída a você é concluída
+  - **Notificações de Comentários**
+    - Notificação quando alguém comenta na sua tarefa (mesmo sem menção)
+    - Notificação quando você é mencionado em um comentário (@usuario)
+  - **Notificações de Compartilhamento**
+    - Notificação quando uma tarefa é compartilhada com você
+    - Notificação quando o dono edita uma tarefa compartilhada com você
+    - Notificação quando outro colaborador edita uma tarefa compartilhada
+
+- ✅ **Colaboração e Compartilhamento**
+  - Compartilhamento de tarefas entre usuários
+  - Atribuição de responsáveis para tarefas
+  - Visualização de tarefas compartilhadas e atribuídas
+  - Gerenciamento de permissões de compartilhamento (visualizar ou editar)
+  - Notificações automáticas ao compartilhar tarefas
+  - Notificações quando tarefas compartilhadas são editadas
+  - Sistema completo de rastreamento de alterações em tarefas compartilhadas
 
 - ✅ **Interface e UX Melhoradas**
   - Modal de confirmação de exclusão estilizado (substituindo alertas padrão)
   - Design moderno e intuitivo para todas as ações de confirmação
   - Feedback visual claro para todas as ações do usuário
+  - Manutenção de estado ao editar tarefas (prioridade, data, etc.)
 
 ## 🔮 Funcionalidades Futuras
 
 ### Planejadas para Implementação
 
-- 👥 **Colaboração**
-  - Compartilhamento de tarefas entre usuários
-  - Atribuição de responsáveis
-  - Menções de usuários em comentários (@usuario)
+- 👥 **Colaboração Avançada**
+  - Permissões granulares de compartilhamento (visualizar, editar, excluir)
 
 - 🏷️ **Tags e Categorias**
   - Sistema de tags personalizadas

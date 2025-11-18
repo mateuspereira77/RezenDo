@@ -880,10 +880,25 @@ function openEditModal(id) {
         }
     }
     
-    // Selecionar prioridade
-    const priorityRadio = document.querySelector(`input[name="editPriority"][value="${todo.priority || 'simple'}"]`);
+    // Selecionar prioridade - desmarcar todos primeiro
+    const allPriorityRadios = document.querySelectorAll('input[name="editPriority"]');
+    allPriorityRadios.forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Marcar o radio correto baseado na prioridade da tarefa
+    const priorityValue = todo.priority || 'simple';
+    const priorityRadio = document.querySelector(`input[name="editPriority"][value="${priorityValue}"]`);
     if (priorityRadio) {
         priorityRadio.checked = true;
+        console.log('Prioridade selecionada:', priorityValue);
+    } else {
+        console.warn('Radio de prioridade não encontrado para:', priorityValue);
+        // Fallback: marcar 'simple' se não encontrar
+        const simpleRadio = document.querySelector('input[name="editPriority"][value="simple"]');
+        if (simpleRadio) {
+            simpleRadio.checked = true;
+        }
     }
     
     // Armazenar ID da tarefa sendo editada
@@ -955,14 +970,31 @@ async function saveEditFromModal() {
         dateValue = null;
     }
     
+    // Obter prioridade selecionada ou usar a prioridade atual da tarefa
+    const checkedPriority = document.querySelector('input[name="editPriority"]:checked');
+    let priorityValue = checkedPriority ? checkedPriority.value : null;
+    
+    // Se nenhum radio estiver marcado, buscar a prioridade da tarefa atual
+    if (!priorityValue) {
+        const todo = todos.find(t => t.id == todoId);
+        if (todo && todo.priority) {
+            priorityValue = todo.priority;
+            console.warn('Nenhuma prioridade selecionada, usando prioridade atual da tarefa:', priorityValue);
+        } else {
+            priorityValue = 'simple';
+            console.warn('Nenhuma prioridade encontrada, usando "simple" como padrão');
+        }
+    }
+    
     const formData = {
         text: editText.value.trim(),
         description: editDescription ? editDescription.value.trim() || null : null,
-        priority: document.querySelector('input[name="editPriority"]:checked')?.value || 'simple',
+        priority: priorityValue,
         date: dateValue, // Pode ser null, string ISO ou 'INVALID'
     };
     
     console.log('FormData completo antes de enviar:', JSON.stringify(formData, null, 2));
+    console.log('Prioridade selecionada:', priorityValue);
     
     if (!formData.text) {
         showToast('Por favor, preencha o título da tarefa.', 'warning');
