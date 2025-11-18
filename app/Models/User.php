@@ -45,4 +45,48 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Relacionamento com as tarefas do usuário.
+     */
+    public function todos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Todo::class);
+    }
+
+    /**
+     * Relacionamento many-to-many com tarefas compartilhadas com este usuário.
+     */
+    public function sharedTodos(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Todo::class, 'todo_user')
+            ->withPivot('permission')
+            ->withTimestamps();
+    }
+
+    /**
+     * Relacionamento com os comentários do usuário.
+     */
+    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Relacionamento com tarefas atribuídas a este usuário.
+     */
+    public function assignedTodos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Todo::class, 'assigned_to');
+    }
+
+    /**
+     * Relacionamento com comentários que o usuário reagiu.
+     */
+    public function commentReactions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Comment::class, 'comment_user')
+            ->withPivot('reaction')
+            ->withTimestamps();
+    }
 }

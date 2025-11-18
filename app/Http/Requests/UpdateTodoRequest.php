@@ -29,6 +29,7 @@ class UpdateTodoRequest extends FormRequest
             'priority' => ['sometimes', 'in:simple,medium,urgent'],
             'day' => ['nullable', 'string'],
             'date' => ['nullable', 'date'],
+            'assigned_to' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
         ];
     }
 
@@ -47,6 +48,23 @@ class UpdateTodoRequest extends FormRequest
         // Se date vier como string vazia, definir como null explicitamente
         if ($this->has('date') && $this->input('date') === '') {
             $this->merge(['date' => null]);
+        }
+
+        // Se assigned_to vier como string vazia ou '0', definir como null
+        if ($this->has('assigned_to')) {
+            $assignedTo = $this->input('assigned_to');
+            \Log::info('UpdateTodoRequest - prepareForValidation - assigned_to raw:', ['value' => $assignedTo, 'type' => gettype($assignedTo)]);
+
+            if ($assignedTo === '' || $assignedTo === '0' || $assignedTo === null || $assignedTo === 0) {
+                $this->merge(['assigned_to' => null]);
+                \Log::info('UpdateTodoRequest - assigned_to convertido para null');
+            } else {
+                $intValue = (int) $assignedTo;
+                $this->merge(['assigned_to' => $intValue]);
+                \Log::info('UpdateTodoRequest - assigned_to convertido para int:', ['value' => $intValue]);
+            }
+        } else {
+            \Log::info('UpdateTodoRequest - assigned_to não presente no request');
         }
     }
 

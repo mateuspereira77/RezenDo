@@ -23,6 +23,69 @@
                 <span style="color: #fb9e0b;">Rezen</span><span style="color: #fbe20d;">Do</span>
             </h1>
         </div>
+
+        <!-- Menu de Autenticação -->
+        <div class="flex justify-end mb-4">
+            @auth
+                <div class="flex items-center gap-4">
+                    <!-- Componente de Notificações -->
+                    <div class="relative" id="notificationsContainer">
+                        <button 
+                            onclick="toggleNotifications()"
+                            class="relative p-2 text-gray-700 hover:text-[#fb9e0b] transition-colors rounded-full hover:bg-gray-100"
+                            aria-label="Notificações"
+                        >
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span id="notificationBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                        </button>
+                        
+                        <!-- Dropdown de Notificações -->
+                        <div id="notificationsDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden flex flex-col">
+                            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                                <h3 class="font-semibold text-gray-800">Notificações</h3>
+                                <button 
+                                    onclick="markAllAsRead()"
+                                    class="text-sm text-[#fb9e0b] hover:text-[#fc6c04] font-medium"
+                                >
+                                    Marcar todas como lidas
+                                </button>
+                            </div>
+                            <div id="notificationsList" class="overflow-y-auto flex-1">
+                                <div class="p-4 text-center text-gray-500 text-sm">Carregando...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <span class="text-sm text-gray-700">Olá, <strong>{{ Auth::user()->name }}</strong></span>
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button 
+                            type="submit"
+                            class="text-sm text-[#fb9e0b] hover:text-[#fc6c04] font-medium transition-colors"
+                        >
+                            Sair
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="flex items-center gap-4">
+                    <a 
+                        href="{{ route('login') }}"
+                        class="text-sm text-gray-700 hover:text-[#fb9e0b] font-medium transition-colors"
+                    >
+                        Entrar
+                    </a>
+                    <a 
+                        href="{{ route('register') }}"
+                        class="text-sm text-[#fb9e0b] hover:text-[#fc6c04] font-medium transition-colors"
+                    >
+                        Cadastrar
+                    </a>
+                </div>
+            @endauth
+        </div>
         
         <!-- Formulário para Criar Tarefa -->
         <div class="main-card-bg rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
@@ -132,6 +195,124 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        // Gerenciamento de Notificações
+        let notificationsOpen = false;
+
+        // Carregar notificações ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUnreadCount();
+            setInterval(loadUnreadCount, 30000); // Atualizar a cada 30 segundos
+        });
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            notificationsOpen = !notificationsOpen;
+            
+            if (notificationsOpen) {
+                dropdown.classList.remove('hidden');
+                loadNotifications();
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function loadUnreadCount() {
+            window.axios.get('/api/notifications/unread-count')
+                .then(response => {
+                    const badge = document.getElementById('notificationBadge');
+                    const count = response.data.unread_count;
+                    
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar contador de notificações:', error);
+                });
+        }
+
+        function loadNotifications() {
+            window.axios.get('/api/notifications')
+                .then(response => {
+                    const listDiv = document.getElementById('notificationsList');
+                    const notifications = response.data.notifications;
+                    
+                    if (notifications.length === 0) {
+                        listDiv.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">Nenhuma notificação</div>';
+                    } else {
+                        listDiv.innerHTML = notifications.map(notification => {
+                            const data = notification.data;
+                            const isRead = notification.read_at !== null;
+                            const date = new Date(notification.created_at);
+                            
+                            return `
+                                <div 
+                                    class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${!isRead ? 'bg-blue-50' : ''}"
+                                    onclick="openNotification('${notification.id}', ${data.todo_id || 'null'})"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 mt-1">
+                                            <div class="w-2 h-2 rounded-full ${!isRead ? 'bg-[#fb9e0b]' : 'bg-transparent'}"></div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm text-gray-800 font-medium">${data.message || 'Nova notificação'}</p>
+                                            <p class="text-xs text-gray-500 mt-1">${date.toLocaleString('pt-BR')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar notificações:', error);
+                    document.getElementById('notificationsList').innerHTML = '<div class="p-4 text-center text-red-500 text-sm">Erro ao carregar notificações</div>';
+                });
+        }
+
+        function openNotification(notificationId, todoId) {
+            // Marcar como lida
+            window.axios.post(`/api/notifications/${notificationId}/read`)
+                .then(() => {
+                    loadUnreadCount();
+                    loadNotifications();
+                })
+                .catch(error => {
+                    console.error('Erro ao marcar notificação como lida:', error);
+                });
+
+            // Redirecionar para a tarefa
+            if (todoId) {
+                window.location.href = `/todos/${todoId}`;
+            }
+        }
+
+        function markAllAsRead() {
+            window.axios.post('/api/notifications/mark-all-read')
+                .then(() => {
+                    loadUnreadCount();
+                    loadNotifications();
+                })
+                .catch(error => {
+                    console.error('Erro ao marcar todas como lidas:', error);
+                });
+        }
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(event) {
+            const container = document.getElementById('notificationsContainer');
+            if (container && !container.contains(event.target)) {
+                const dropdown = document.getElementById('notificationsDropdown');
+                dropdown.classList.add('hidden');
+                notificationsOpen = false;
+            }
+        });
+    </script>
     
     <!-- Rodapé -->
     <footer class="mt-8 sm:mt-12 py-4 text-center">

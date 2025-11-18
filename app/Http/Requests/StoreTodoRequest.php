@@ -28,6 +28,7 @@ class StoreTodoRequest extends FormRequest
             'priority' => ['required', 'in:simple,medium,urgent'],
             'day' => ['nullable', 'string'],
             'date' => ['nullable', 'date'],
+            'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 

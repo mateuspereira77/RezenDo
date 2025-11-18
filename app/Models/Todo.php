@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use App\Priority;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class Todo extends Model
 {
     use HasFactory;
+
     protected $fillable = [
+        'user_id',
+        'assigned_to',
         'text',
         'description',
         'completed',
@@ -90,7 +93,7 @@ class Todo extends Model
      */
     public function isPending(): bool
     {
-        return !$this->completed;
+        return ! $this->completed;
     }
 
     /**
@@ -122,7 +125,7 @@ class Todo extends Model
      */
     public function toggleCompletion(): bool
     {
-        return $this->update(['completed' => !$this->completed]);
+        return $this->update(['completed' => ! $this->completed]);
     }
 
     /**
@@ -155,5 +158,94 @@ class Todo extends Model
     public function getPriorityColorAttribute(): string
     {
         return $this->priority?->color() ?? 'green';
+    }
+
+    /**
+     * Relacionamento com o usuário proprietário da tarefa.
+     */
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope para filtrar tarefas do usuário autenticado.
+     */
+    public function scopeForUser(Builder $query, ?int $userId = null): Builder
+    {
+        return $query->where('user_id', $userId ?? auth()->id());
+    }
+
+    /**
+     * Relacionamento many-to-many com usuários que têm acesso compartilhado à tarefa.
+     */
+    public function sharedWith(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'todo_user')
+            ->withPivot('permission')
+            ->withTimestamps();
+    }
+
+    /**
+     * Scope para incluir tarefas compartilhadas ou atribuídas ao usuário autenticado.
+     */
+    public function scopeForUserOrShared(Builder $query, ?int $userId = null): Builder
+    {
+        $userId = $userId ?? auth()->id();
+
+        return $query->where(function ($q) use ($userId) {
+            $q->where('user_id', $userId)
+                ->orWhere('assigned_to', $userId)
+                ->orWhereHas('sharedWith', function ($q) use ($userId) {
+                    $q->where('users.id', $userId);
+                });
+        });
+    }
+
+    /**
+     * Verifica se a tarefa está compartilhada com um usuário específico.
+     */
+    public function isSharedWith(int $userId): bool
+    {
+        return $this->sharedWith()->where('users.id', $userId)->exists();
+    }
+
+    /**
+     * Verifica se o usuário tem permissão de escrita na tarefa compartilhada.
+     */
+    public function hasWritePermission(int $userId): bool
+    {
+        if ($this->user_id === $userId) {
+            return true;
+        }
+
+        return $this->sharedWith()
+            ->where('users.id', $userId)
+            ->wherePivot('permission', 'write')
+            ->exists();
+    }
+
+    /**
+     * Relacionamento com os comentários da tarefa.
+     */
+    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Relacionamento com o usuário responsável pela tarefa.
+     */
+    public function assignedTo(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
+     * Scope para filtrar tarefas atribuídas a um usuário.
+     */
+    public function scopeAssignedTo(Builder $query, ?int $userId = null): Builder
+    {
+        return $query->where('assigned_to', $userId ?? auth()->id());
     }
 }

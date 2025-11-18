@@ -722,7 +722,13 @@ function createModalTodoCard(todo) {
     
     const color = priorityColors[todo.priority] || priorityColors.simple;
     
-    card.className = `p-4 mb-3 rounded border-l-4 ${color} bg-white shadow-sm hover:shadow-md transition-shadow`;
+    card.className = `p-4 mb-3 rounded border-l-4 ${color} bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer`;
+    card.onclick = (e) => {
+        // Se não clicou em um botão, abrir visualização
+        if (!e.target.closest('button')) {
+            window.location.href = `/todos/${todo.id}`;
+        }
+    };
     
     const header = document.createElement('div');
     header.className = 'flex items-start justify-between mb-2';
@@ -731,8 +737,12 @@ function createModalTodoCard(todo) {
     titleWrapper.className = 'flex-1';
     
     const title = document.createElement('h4');
-    title.className = `font-semibold text-gray-800 ${todo.completed ? 'line-through text-gray-500' : ''}`;
+    title.className = `font-semibold text-gray-800 cursor-pointer hover:text-[#fb9e0b] transition-colors ${todo.completed ? 'line-through text-gray-500' : ''}`;
     title.textContent = todo.text;
+    title.onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = `/todos/${todo.id}`;
+    };
     titleWrapper.appendChild(title);
     
     header.appendChild(titleWrapper);

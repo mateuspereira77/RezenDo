@@ -17,7 +17,37 @@
                 </h1>
                 <p class="text-sm sm:text-base text-gray-600">Gerencie todas as suas tarefas</p>
             </div>
-            <div class="flex gap-2 flex-wrap">
+            <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+                <!-- Componente de Notificações -->
+                <div class="relative" id="notificationsContainer">
+                    <button 
+                        onclick="toggleNotifications()"
+                        class="relative p-2 text-gray-700 hover:text-[#fb9e0b] transition-colors rounded-full hover:bg-gray-100"
+                        aria-label="Notificações"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span id="notificationBadge" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </button>
+                    
+                    <!-- Dropdown de Notificações -->
+                    <div id="notificationsDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden flex flex-col">
+                        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                            <h3 class="font-semibold text-gray-800">Notificações</h3>
+                            <button 
+                                onclick="markAllAsRead()"
+                                class="text-sm text-[#fb9e0b] hover:text-[#fc6c04] font-medium"
+                            >
+                                Marcar todas como lidas
+                            </button>
+                        </div>
+                        <div id="notificationsList" class="overflow-y-auto flex-1">
+                            <div class="p-4 text-center text-gray-500 text-sm">Carregando...</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <a 
                     href="{{ route('todos.index') }}"
                     class="custom-btn-primary px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base w-full sm:w-auto text-center"
@@ -200,6 +230,57 @@
         </div>
     </div>
     
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="deleteConfirmModal" class="hidden fixed inset-0 z-[9999]" style="display: none;">
+        <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeDeleteModal()" style="z-index: 1;"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 2; pointer-events: none;">
+            <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6" style="pointer-events: auto; position: relative;">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-700">Confirmar Exclusão</h2>
+                    <button 
+                        onclick="closeDeleteModal()"
+                        class="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p id="deleteConfirmMessage" class="text-gray-700 text-center text-base">
+                        Tem certeza que deseja excluir esta tarefa?
+                    </p>
+                    <p class="text-gray-500 text-center text-sm mt-2">
+                        Esta ação não pode ser desfeita.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button 
+                        onclick="confirmDelete()"
+                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                        Excluir
+                    </button>
+                    <button 
+                        onclick="closeDeleteModal()"
+                        class="flex-1 px-4 py-2.5 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Toast de Notificação -->
     <div id="toastNotification" class="toast-notification hidden fixed z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 transition-all">
         <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,6 +293,120 @@
             </svg>
         </button>
     </div>
+    
+    <script>
+        // Gerenciamento de Notificações (mesmo código do index.blade.php)
+        let notificationsOpen = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUnreadCount();
+            setInterval(loadUnreadCount, 30000);
+        });
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            notificationsOpen = !notificationsOpen;
+            
+            if (notificationsOpen) {
+                dropdown.classList.remove('hidden');
+                loadNotifications();
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function loadUnreadCount() {
+            window.axios.get('/api/notifications/unread-count')
+                .then(response => {
+                    const badge = document.getElementById('notificationBadge');
+                    const count = response.data.unread_count;
+                    
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar contador de notificações:', error);
+                });
+        }
+
+        function loadNotifications() {
+            window.axios.get('/api/notifications')
+                .then(response => {
+                    const listDiv = document.getElementById('notificationsList');
+                    const notifications = response.data.notifications;
+                    
+                    if (notifications.length === 0) {
+                        listDiv.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">Nenhuma notificação</div>';
+                    } else {
+                        listDiv.innerHTML = notifications.map(notification => {
+                            const data = notification.data;
+                            const isRead = notification.read_at !== null;
+                            const date = new Date(notification.created_at);
+                            
+                            return `
+                                <div 
+                                    class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${!isRead ? 'bg-blue-50' : ''}"
+                                    onclick="openNotification('${notification.id}', ${data.todo_id || 'null'})"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0 mt-1">
+                                            <div class="w-2 h-2 rounded-full ${!isRead ? 'bg-[#fb9e0b]' : 'bg-transparent'}"></div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm text-gray-800 font-medium">${data.message || 'Nova notificação'}</p>
+                                            <p class="text-xs text-gray-500 mt-1">${date.toLocaleString('pt-BR')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar notificações:', error);
+                    document.getElementById('notificationsList').innerHTML = '<div class="p-4 text-center text-red-500 text-sm">Erro ao carregar notificações</div>';
+                });
+        }
+
+        function openNotification(notificationId, todoId) {
+            window.axios.post(`/api/notifications/${notificationId}/read`)
+                .then(() => {
+                    loadUnreadCount();
+                    loadNotifications();
+                })
+                .catch(error => {
+                    console.error('Erro ao marcar notificação como lida:', error);
+                });
+
+            if (todoId) {
+                window.location.href = `/todos/${todoId}`;
+            }
+        }
+
+        function markAllAsRead() {
+            window.axios.post('/api/notifications/mark-all-read')
+                .then(() => {
+                    loadUnreadCount();
+                    loadNotifications();
+                })
+                .catch(error => {
+                    console.error('Erro ao marcar todas como lidas:', error);
+                });
+        }
+
+        document.addEventListener('click', function(event) {
+            const container = document.getElementById('notificationsContainer');
+            if (container && !container.contains(event.target)) {
+                const dropdown = document.getElementById('notificationsDropdown');
+                dropdown.classList.add('hidden');
+                notificationsOpen = false;
+            }
+        });
+    </script>
 </body>
 </html>
 

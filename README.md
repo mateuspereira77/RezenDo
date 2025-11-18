@@ -155,14 +155,43 @@ Se preferir usar Docker:
   - Notificações para tarefas pendentes do dia atual
   - Lembretes de tarefas do dia seguinte (após 18h)
 
+- ✅ **Sistema de Comentários**
+  - Comentários em tarefas com suporte a respostas aninhadas
+  - Edição e exclusão de comentários próprios
+  - Ordenação inteligente: posts mais recentemente comentados aparecem no topo
+  - Interface limpa com comentários exibidos verticalmente (sem indentação visual)
+  - Indicador visual discreto para identificar respostas
+  - Contador de caracteres em tempo real (máximo 1000 caracteres)
+  - Permissões: apenas o autor pode editar, autor ou dono da tarefa podem excluir
+
+- ✅ **Sistema de Autenticação**
+  - Login e registro de usuários
+  - Proteção de rotas com middleware de autenticação
+  - Sessões seguras e gerenciamento de autenticação
+  - Cada usuário possui suas próprias tarefas e comentários
+
+- ✅ **Sistema de Notificações**
+  - Notificações em tempo real no navegador
+  - Notificações automáticas quando uma tarefa é atribuída a você
+  - Notificações quando uma tarefa atribuída a você é concluída
+  - Contador de notificações não lidas
+  - Dropdown de notificações com histórico
+  - Marcar notificações como lidas individualmente ou em lote
+  - Integração com sistema de atribuição de tarefas
+
+- ✅ **Interface e UX Melhoradas**
+  - Modal de confirmação de exclusão estilizado (substituindo alertas padrão)
+  - Design moderno e intuitivo para todas as ações de confirmação
+  - Feedback visual claro para todas as ações do usuário
+
 ## 🔮 Funcionalidades Futuras
 
 ### Planejadas para Implementação
 
 - 👥 **Colaboração**
   - Compartilhamento de tarefas entre usuários
-  - Comentários em tarefas
   - Atribuição de responsáveis
+  - Menções de usuários em comentários (@usuario)
 
 - 🏷️ **Tags e Categorias**
   - Sistema de tags personalizadas

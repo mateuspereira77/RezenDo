@@ -328,6 +328,10 @@ function setupEventListeners() {
             if (editModal && !editModal.classList.contains('hidden')) {
                 closeEditModal();
             }
+            const deleteModal = document.getElementById('deleteConfirmModal');
+            if (deleteModal && !deleteModal.classList.contains('hidden')) {
+                closeDeleteModal();
+            }
         }
     });
 }
@@ -473,7 +477,7 @@ function renderTodos() {
                         (index % 5) === 3 ? '0.8deg' : '0deg';
         
         return `
-            <div class="post-it-task ${priorityClass}" style="transform: rotate(${rotation});">
+            <div class="post-it-task ${priorityClass}" style="transform: rotate(${rotation});" data-todo-id="${todo.id}">
                 ${todo.completed ? `
                     <div class="completed-stamp">
                         <div class="stamp-text">CONCLUÍDA</div>
@@ -485,11 +489,15 @@ function renderTodos() {
                             <input 
                                 type="checkbox" 
                                 ${todo.completed ? 'checked' : ''}
-                                onchange="toggleTodo(${todo.id})"
+                                onchange="event.stopPropagation(); toggleTodo(${todo.id})"
                                 class="post-it-checkbox flex-shrink-0"
                             >
                             <div class="post-it-title-wrapper flex-1 min-w-0">
-                                <h3 class="post-it-title ${completedClass}" title="${escapeHtml(todo.text)}">
+                                <h3 
+                                    class="post-it-title ${completedClass} cursor-pointer hover:text-[#fb9e0b] transition-colors" 
+                                    title="${escapeHtml(todo.text)}"
+                                    onclick="event.stopPropagation(); viewTodo(${todo.id})"
+                                >
                                     ${escapeHtml(todo.text)}
                                 </h3>
                             </div>
@@ -519,14 +527,14 @@ function renderTodos() {
                     })()}
                     <div class="post-it-actions">
                         <button 
-                            onclick="startEdit(${todo.id})"
+                            onclick="event.stopPropagation(); startEdit(${todo.id})"
                             class="post-it-btn post-it-btn-edit"
                             title="Editar tarefa"
                         >
                             ✏️ Editar
                         </button>
                         <button 
-                            onclick="deleteTodo(${todo.id})"
+                            onclick="event.stopPropagation(); deleteTodo(${todo.id})"
                             class="post-it-btn post-it-btn-delete"
                             title="Deletar tarefa"
                         >
@@ -537,7 +545,31 @@ function renderTodos() {
             </div>
         `;
     }).join('');
+    
+    // Adicionar event listeners para clique no card inteiro
+    if (todosList) {
+        todosList.querySelectorAll('.post-it-task').forEach(card => {
+            const todoId = card.dataset.todoId;
+            if (todoId) {
+                card.addEventListener('click', function(e) {
+                    // Se não clicou em um botão, checkbox ou input, abrir visualização
+                    if (!e.target.closest('button') && !e.target.closest('input[type="checkbox"]') && !e.target.closest('input')) {
+                        viewTodo(todoId);
+                    }
+                });
+            }
+        });
+    }
 }
+
+// Visualizar tarefa individualmente
+function viewTodo(todoId) {
+    console.log('viewTodo chamado com ID:', todoId);
+    window.location.href = `/todos/${todoId}`;
+}
+
+// Tornar a função global
+window.viewTodo = viewTodo;
 
 // Escapar HTML para prevenir XSS
 function escapeHtml(text) {
@@ -991,19 +1023,106 @@ async function toggleTodo(id) {
 }
 
 // Deletar tarefa
-async function deleteTodo(id) {
-    if (!confirm('Tem certeza que deseja excluir esta tarefa?')) {
+// Variável para armazenar o ID da tarefa a ser deletada
+let todoToDeleteId = null;
+let todosToDeleteCount = null;
+
+// Mostrar modal de confirmação de exclusão
+function showDeleteModal(id = null, count = null) {
+    const modal = document.getElementById('deleteConfirmModal');
+    const message = document.getElementById('deleteConfirmMessage');
+    
+    if (!modal) {
+        console.error('Modal deleteConfirmModal não encontrado');
         return;
     }
     
+    if (!message) {
+        console.error('Elemento deleteConfirmMessage não encontrado');
+        return;
+    }
+    
+    todoToDeleteId = id;
+    todosToDeleteCount = count;
+    
+    if (count !== null) {
+        message.textContent = `Tem certeza que deseja excluir todas as ${count} tarefa${count !== 1 ? 's' : ''} concluída${count !== 1 ? 's' : ''}?`;
+    } else {
+        message.textContent = 'Tem certeza que deseja excluir esta tarefa?';
+    }
+    
+    // Forçar remoção da classe hidden e garantir que o modal seja visível
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// Fechar modal de confirmação
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    todoToDeleteId = null;
+    todosToDeleteCount = null;
+}
+
+// Confirmar exclusão
+async function confirmDelete() {
+    if (todosToDeleteCount !== null) {
+        // Excluir todas as tarefas concluídas
+        await deleteAllCompletedConfirmed();
+    } else if (todoToDeleteId !== null) {
+        // Excluir uma tarefa
+        await deleteTodoConfirmed(todoToDeleteId);
+    }
+    closeDeleteModal();
+}
+
+// Excluir tarefa confirmada
+async function deleteTodoConfirmed(id) {
     try {
         await window.axios.delete(`/api/todos/${id}`);
         todos = todos.filter(t => t.id !== id);
         applyFilter();
+        showToast('Tarefa excluída com sucesso!', 'success');
     } catch (error) {
         console.error('Erro ao deletar tarefa:', error);
         showToast('Erro ao deletar tarefa. Tente novamente.', 'error');
     }
+}
+
+// Excluir todas as tarefas concluídas confirmadas
+async function deleteAllCompletedConfirmed() {
+    const completedTodos = todos.filter(t => t.completed);
+    const count = completedTodos.length;
+    
+    if (count === 0) {
+        showToast('Não há tarefas concluídas para deletar.', 'warning');
+        return;
+    }
+    
+    try {
+        const deletePromises = completedTodos.map(todo => 
+            window.axios.delete(`/api/todos/${todo.id}`)
+        );
+        
+        await Promise.all(deletePromises);
+        
+        todos = todos.filter(t => !t.completed);
+        applyFilter();
+        
+        showToast(`${count} tarefa${count !== 1 ? 's' : ''} concluída${count !== 1 ? 's' : ''} deletada${count !== 1 ? 's' : ''} com sucesso!`);
+    } catch (error) {
+        console.error('Erro ao deletar tarefas concluídas:', error);
+        showToast('Erro ao deletar tarefas concluídas. Tente novamente.', 'error');
+    }
+}
+
+async function deleteTodo(id) {
+    showDeleteModal(id);
 }
 
 // Deletar todas as tarefas concluídas
@@ -1016,29 +1135,7 @@ async function deleteAllCompleted() {
         return;
     }
     
-    if (!confirm(`Tem certeza que deseja excluir todas as ${count} tarefa${count !== 1 ? 's' : ''} concluída${count !== 1 ? 's' : ''}? Esta ação não pode ser desfeita.`)) {
-        return;
-    }
-    
-    try {
-        // Deletar todas as tarefas concluídas
-        const deletePromises = completedTodos.map(todo => 
-            window.axios.delete(`/api/todos/${todo.id}`)
-        );
-        
-        await Promise.all(deletePromises);
-        
-        // Remover das tarefas locais
-        todos = todos.filter(t => !t.completed);
-        
-        // Aplicar filtro novamente
-        applyFilter();
-        
-        showToast(`${count} tarefa${count !== 1 ? 's' : ''} concluída${count !== 1 ? 's' : ''} deletada${count !== 1 ? 's' : ''} com sucesso!`);
-    } catch (error) {
-        console.error('Erro ao deletar tarefas concluídas:', error);
-        showToast('Erro ao deletar tarefas concluídas. Tente novamente.', 'error');
-    }
+    showDeleteModal(null, count);
 }
 
 // Mostrar toast de notificação
@@ -1139,4 +1236,7 @@ window.convertBRToISO = convertBRToISO;
 window.formatDateBR = formatDateBR;
 window.filterTodos = filterTodos;
 window.deleteAllCompleted = deleteAllCompleted;
+window.showDeleteModal = showDeleteModal;
+window.closeDeleteModal = closeDeleteModal;
+window.confirmDelete = confirmDelete;
 
