@@ -108,16 +108,28 @@
             </form>
         </div>
         
-        <!-- Botão para Ver Tarefas -->
-        <div class="main-card-bg rounded-lg shadow-md p-6 text-center">
-            <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-700">Minhas Tarefas</h2>
-            <p class="text-gray-600 mb-6">Visualize e gerencie todas as suas tarefas em uma página dedicada</p>
-            <a 
-                href="{{ route('todos.list') }}"
-                class="inline-block custom-btn-primary px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-                📋 Ver Minhas Tarefas
-            </a>
+        <!-- Botões de Navegação -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div class="main-card-bg rounded-lg shadow-md p-6 text-center">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-700">Minhas Tarefas</h2>
+                <p class="text-gray-600 mb-6">Visualize e gerencie todas as suas tarefas em uma página dedicada</p>
+                <a 
+                    href="{{ route('todos.list') }}"
+                    class="inline-block custom-btn-primary px-8 py-3 rounded-lg font-semibold transition-colors"
+                >
+                    📋 Ver Minhas Tarefas
+                </a>
+            </div>
+            <div class="main-card-bg rounded-lg shadow-md p-6 text-center">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-700">Calendário</h2>
+                <p class="text-gray-600 mb-6">Visualize suas tarefas organizadas por mês ou semana</p>
+                <a 
+                    href="{{ route('todos.calendar') }}"
+                    class="inline-block custom-btn-primary px-8 py-3 rounded-lg font-semibold transition-colors"
+                >
+                    📅 Ver Calendário
+                </a>
+            </div>
         </div>
     </div>
     

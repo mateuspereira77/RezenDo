@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTodoRequest;
+use App\Http\Requests\UpdateTodoRequest;
 use App\Models\Todo;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TodoController extends Controller
@@ -24,41 +25,17 @@ class TodoController extends Controller
         return view('todos.edit', ['todo' => $todo]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreTodoRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'text' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string', 'max:500'],
-            'priority' => ['required', 'in:simple,medium,urgent'],
-            'day' => ['nullable', 'string'],
-            'date' => ['nullable', 'date'],
-        ]);
-
-        $todo = Todo::create($validated);
+        $todo = Todo::create($request->validated());
 
         return response()->json($todo, 201);
     }
 
-    public function update(Request $request, Todo $todo): JsonResponse
+    public function update(UpdateTodoRequest $request, Todo $todo): JsonResponse
     {
-        $validated = $request->validate([
-            'text' => ['sometimes', 'required', 'string', 'max:200'],
-            'description' => ['nullable', 'string', 'max:500'],
-            'completed' => ['sometimes', 'boolean'],
-            'priority' => ['sometimes', 'in:simple,medium,urgent'],
-            'day' => ['nullable', 'string'],
-            'date' => ['nullable', 'date'],
-        ]);
+        $todo->update($request->validated());
 
-        // Se date vier como string vazia, definir como null explicitamente
-        if (isset($validated['date']) && $validated['date'] === '') {
-            $validated['date'] = null;
-        }
-        
-        // Sempre atualizar, mesmo que date seja null (para permitir remover a data)
-        $todo->update($validated);
-
-        // Recarregar o modelo para garantir que temos os dados atualizados
         $todo->refresh();
 
         return response()->json($todo);
@@ -92,6 +69,33 @@ class TodoController extends Controller
     {
         $todos = Todo::orderByPriority()
             ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($todos);
+    }
+
+    public function calendar(): View
+    {
+        return view('todos.calendar');
+    }
+
+    public function getByDateRange(): JsonResponse
+    {
+        $startDate = request()->input('start_date');
+        $endDate = request()->input('end_date');
+
+        $query = Todo::query()->whereNotNull('date');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('date', [$startDate, $endDate]);
+        } elseif ($startDate) {
+            $query->where('date', '>=', $startDate);
+        } elseif ($endDate) {
+            $query->where('date', '<=', $endDate);
+        }
+
+        $todos = $query->orderBy('date', 'asc')
+            ->orderByPriority()
             ->get();
 
         return response()->json($todos);

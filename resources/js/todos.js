@@ -575,9 +575,17 @@ async function createTodo() {
         }
     }
     
+    // Verificar se a descrição excede 500 caracteres antes de enviar
+    const descriptionValue = todoDescription.value.trim();
+    if (descriptionValue && descriptionValue.length > 500) {
+        showToast('A descrição não pode ter mais de 500 caracteres. Atualmente tem ' + descriptionValue.length + ' caracteres.', 'error');
+        todoDescription.focus();
+        return;
+    }
+    
     const formData = {
         text: todoText.value.trim(),
-        description: todoDescription.value.trim() || null,
+        description: descriptionValue || null,
         priority: document.querySelector('input[name="priority"]:checked').value,
         date: dateValue,
     };
@@ -599,6 +607,14 @@ async function createTodo() {
         todoForm.reset();
         editingTodoId = null;
         
+        // Resetar contadores
+        if (todoText && todoTextCounter) {
+            todoTextCounter.textContent = '0 / 200 caracteres';
+        }
+        if (todoDescription && todoDescriptionCounter) {
+            todoDescriptionCounter.textContent = '0 / 500 caracteres';
+        }
+        
         // Se estiver na página principal, mostrar mensagem de sucesso
         if (window.location.pathname === '/') {
             showToast('Tarefa criada com sucesso! Clique em "Ver Minhas Tarefas" para visualizá-la.');
@@ -610,7 +626,35 @@ async function createTodo() {
         }
     } catch (error) {
         console.error('Erro ao criar tarefa:', error);
-        showToast('Erro ao criar tarefa. Tente novamente.', 'error');
+        console.error('Detalhes do erro:', error.response);
+        
+        // Tratar erros de validação do Laravel
+        if (error.response && error.response.status === 422) {
+            const errors = error.response.data.errors;
+            let errorMessages = [];
+            
+            // Coletar todas as mensagens de erro
+            if (errors) {
+                Object.keys(errors).forEach(field => {
+                    if (Array.isArray(errors[field])) {
+                        errorMessages.push(...errors[field]);
+                    } else {
+                        errorMessages.push(errors[field]);
+                    }
+                });
+            }
+            
+            // Mostrar mensagens de erro específicas
+            if (errorMessages.length > 0) {
+                showToast(errorMessages.join(' '), 'error');
+            } else {
+                showToast('Erro de validação. Verifique os campos preenchidos.', 'error');
+            }
+        } else if (error.response && error.response.data && error.response.data.message) {
+            showToast('Erro: ' + error.response.data.message, 'error');
+        } else {
+            showToast('Erro ao criar tarefa. Tente novamente.', 'error');
+        }
     }
 }
 

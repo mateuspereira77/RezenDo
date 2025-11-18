@@ -10,7 +10,7 @@
 
 ## 📋 Sobre o RezenDo
 
-O **RezenDo** é uma aplicação web desenvolvida para ajudar você a organizar e gerenciar suas tarefas de forma eficiente e visualmente atraente. Com uma interface inspirada em post-its coloridos, o aplicativo oferece uma experiência única e agradável para criar, editar e acompanhar suas tarefas.
+O **RezenDo** é uma aplicação web desenvolvida para ajudar você a organizar e gerenciar suas tarefas de forma eficiente e visualmente atraente. Com uma interface inspirada em post-its coloridos, o aplicativo oferece uma experiência única e agradável para criar, editar e acompanhar suas tarefas. O sistema inclui um calendário completo com visualização mensal e semanal, destaque de feriados, e sistema de notificações automáticas para nunca perder um prazo importante.
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -141,15 +141,23 @@ Se preferir usar Docker:
   - Validação de caracteres máximos
   - Proteção CSRF
   - Sanitização de dados
+  - Filtro de palavras inadequadas (validação de profanidade)
+
+- ✅ **Calendário de Tarefas**
+  - Visualização mensal e semanal
+  - Navegação entre meses e anos
+  - Integração completa com datas e prazos
+  - Destaque visual de feriados nacionais e do Rio de Janeiro
+  - Identificação automática de feriados móveis (Carnaval, Páscoa, Corpus Christi)
+  - Concluir e editar tarefas diretamente no calendário
+  - Modal com tarefas do dia ao clicar em uma data
+  - Lembretes e notificações automáticas do navegador
+  - Notificações para tarefas pendentes do dia atual
+  - Lembretes de tarefas do dia seguinte (após 18h)
 
 ## 🔮 Funcionalidades Futuras
 
 ### Planejadas para Implementação
-
-- 📅 **Calendário de Tarefas**
-  - Visualização mensal e semanal
-  - Integração com datas e prazos
-  - Lembretes e notificações
 
 - 👥 **Colaboração**
   - Compartilhamento de tarefas entre usuários
@@ -166,10 +174,10 @@ Se preferir usar Docker:
   - Relatórios de conclusão de tarefas
   - Análise de tempo gasto por tarefa
 
-- 🔔 **Notificações**
+- 🔔 **Notificações Avançadas**
   - Notificações por email
-  - Lembretes de prazos
-  - Notificações push no navegador
+  - Lembretes de prazos personalizados
+  - Configuração de horários de notificação
 
 - 🔍 **Busca Avançada**
   - Busca por texto, data, prioridade
@@ -216,21 +224,11 @@ O projeto utiliza Laravel Pint para formatação automática:
 vendor/bin/pint
 ```
 
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Sinta-se à vontade para:
-
-1. Fazer um Fork do projeto
-2. Criar uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abrir um Pull Request
-
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-## 👨‍💻 Desenvolvido com ❤️
+## 👨‍💻 Desenvolvido por Mateus Pereira
 
 Desenvolvido utilizando as melhores práticas do ecossistema Laravel e tecnologias modernas de frontend.
 

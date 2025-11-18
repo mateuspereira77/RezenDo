@@ -17,12 +17,20 @@
                 </h1>
                 <p class="text-sm sm:text-base text-gray-600">Gerencie todas as suas tarefas</p>
             </div>
-            <a 
-                href="{{ route('todos.index') }}"
-                class="custom-btn-primary px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base w-full sm:w-auto text-center"
-            >
-                ← Voltar
-            </a>
+            <div class="flex gap-2 flex-wrap">
+                <a 
+                    href="{{ route('todos.index') }}"
+                    class="custom-btn-primary px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base w-full sm:w-auto text-center"
+                >
+                    ← Voltar
+                </a>
+                <a 
+                    href="{{ route('todos.calendar') }}"
+                    class="px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base w-full sm:w-auto text-center border-2 border-gray-300 hover:bg-gray-50"
+                >
+                    📅 Calendário
+                </a>
+            </div>
         </div>
         
         <!-- Lista de Tarefas -->
