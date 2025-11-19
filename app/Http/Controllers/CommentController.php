@@ -41,6 +41,42 @@ class CommentController extends Controller
     }
 
     /**
+     * Listar comentários de uma tarefa deletada.
+     */
+    public function indexHistory(int $id): JsonResponse
+    {
+        $userId = auth()->id();
+
+        $todo = Todo::onlyTrashed()
+            ->where(function ($query) use ($userId) {
+                // Tarefas onde o usuário é o dono
+                $query->where('user_id', $userId)
+                    // Tarefas onde o usuário é o responsável
+                    ->orWhere('assigned_to', $userId)
+                    // Tarefas compartilhadas com permissão de escrita
+                    ->orWhereHas('sharedWith', function ($q) use ($userId) {
+                        $q->where('users.id', $userId)
+                            ->where('todo_user.permission', 'write');
+                    });
+            })
+            ->findOrFail($id);
+
+        $comments = $todo->comments()
+            ->whereNull('parent_id')
+            ->with(['user:id,name,email', 'mentions:id,name,email'])
+            ->get()
+            ->map(function ($comment) {
+                $comment->replies = $this->loadRepliesRecursively($comment);
+                $comment->last_activity_at = $this->getLastActivityDate($comment);
+                return $comment;
+            })
+            ->sortByDesc('last_activity_at')
+            ->values();
+
+        return response()->json($comments);
+    }
+
+    /**
      * Criar um novo comentário.
      */
     public function store(StoreCommentRequest $request, Todo $todo): JsonResponse

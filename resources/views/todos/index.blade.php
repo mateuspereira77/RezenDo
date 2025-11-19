@@ -193,6 +193,16 @@
                     📅 Ver Calendário
                 </a>
             </div>
+            <div class="main-card-bg rounded-lg shadow-md p-6 text-center">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-700">Meu Histórico</h2>
+                <p class="text-gray-600 mb-6">Visualize e restaure tarefas excluídas</p>
+                <a 
+                    href="{{ route('todos.history') }}"
+                    class="inline-block custom-btn-primary px-8 py-3 rounded-lg font-semibold transition-colors"
+                >
+                    📜 Ver Histórico
+                </a>
+            </div>
         </div>
     </div>
     

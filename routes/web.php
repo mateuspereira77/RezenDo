@@ -19,6 +19,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [TodoController::class, 'index'])->name('todos.index');
     Route::get('/minhas-tarefas', [TodoController::class, 'list'])->name('todos.list');
     Route::get('/calendario', [TodoController::class, 'calendar'])->name('todos.calendar');
+    Route::get('/meu-historico', [TodoController::class, 'history'])->name('todos.history');
+    Route::get('/todos/history/{id}', [TodoController::class, 'showHistory'])->where('id', '[0-9]+')->name('todos.showHistory');
     Route::get('/todos/{todo}', [TodoController::class, 'show'])->name('todos.show');
     Route::get('/todos/{todo}/edit', [TodoController::class, 'edit'])->name('todos.edit');
 
@@ -30,6 +32,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
         Route::patch('/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
         Route::patch('/{todo}/priority', [TodoController::class, 'changePriority'])->name('todos.changePriority');
+        
+        // Rotas de histórico
+        Route::get('/history/all', [TodoController::class, 'getHistory'])->name('todos.history.all');
+        Route::post('/history/{id}/restore', [TodoController::class, 'restore'])->name('todos.history.restore');
+        Route::delete('/history/{id}/force', [TodoController::class, 'forceDelete'])->name('todos.history.forceDelete');
 
         // Rotas de compartilhamento
         Route::get('/{todo}/shares', [\App\Http\Controllers\TodoShareController::class, 'index'])->name('todos.shares.index');
@@ -39,6 +46,7 @@ Route::middleware('auth')->group(function () {
 
         // Rotas de comentários
         Route::get('/{todo}/comments', [\App\Http\Controllers\CommentController::class, 'index'])->name('todos.comments.index');
+        Route::get('/history/{id}/comments', [\App\Http\Controllers\CommentController::class, 'indexHistory'])->name('todos.history.comments.index');
         Route::post('/{todo}/comments', [\App\Http\Controllers\CommentController::class, 'store'])->name('todos.comments.store');
         Route::put('/comments/{comment}', [\App\Http\Controllers\CommentController::class, 'update'])->name('comments.update');
         Route::delete('/comments/{comment}', [\App\Http\Controllers\CommentController::class, 'destroy'])->name('comments.destroy');

@@ -111,6 +111,21 @@
             <div id="weekCalendarGrid" class="grid grid-cols-7 gap-2">
                 <!-- Dias serão renderizados aqui via JavaScript -->
             </div>
+            <!-- Barra de rolagem para navegação de semanas -->
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-600 font-medium min-w-[80px]">Semana:</span>
+                    <input 
+                        type="range" 
+                        id="weekSlider" 
+                        min="0" 
+                        max="52" 
+                        value="0" 
+                        class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-week"
+                    />
+                    <span id="weekSliderValue" class="text-sm text-gray-600 font-medium min-w-[100px] text-right">Semana atual</span>
+                </div>
+            </div>
         </div>
 
         <!-- Modal de Tarefas do Dia -->

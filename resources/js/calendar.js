@@ -3,6 +3,7 @@ let currentDate = new Date();
 let currentView = 'month'; // 'month' ou 'week'
 let todos = [];
 let todosByDate = {};
+let isUpdatingSlider = false; // Flag para evitar loop ao atualizar slider
 
 // Meses em português
 const months = [
@@ -91,12 +92,105 @@ function updateMonthYearDisplay() {
     }
 }
 
+// Atualizar o slider de semanas
+function updateWeekSlider() {
+    if (currentView !== 'week' || isUpdatingSlider) {
+        return;
+    }
+    
+    const slider = document.getElementById('weekSlider');
+    const sliderValue = document.getElementById('weekSliderValue');
+    
+    if (!slider || !sliderValue) {
+        return;
+    }
+    
+    isUpdatingSlider = true;
+    
+    const year = currentDate.getFullYear();
+    const weekStart = getPeriodStartDate();
+    
+    // Calcular a primeira semana do ano (domingo da primeira semana que contém 1º de janeiro)
+    const firstDayOfYear = new Date(year, 0, 1);
+    const firstDayOfWeek = firstDayOfYear.getDay();
+    const firstWeekStart = new Date(year, 0, 1 - firstDayOfWeek);
+    firstWeekStart.setHours(0, 0, 0, 0);
+    
+    // Calcular diferença em semanas
+    const diffTime = weekStart - firstWeekStart;
+    const diffWeeks = Math.round(diffTime / (7 * 24 * 60 * 60 * 1000));
+    
+    // Garantir que o valor está dentro do range (0-52)
+    const sliderPosition = Math.max(0, Math.min(52, diffWeeks));
+    slider.value = sliderPosition;
+    
+    // Atualizar o texto com o intervalo da semana
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    
+    const startDay = String(weekStart.getDate()).padStart(2, '0');
+    const startMonth = String(weekStart.getMonth() + 1).padStart(2, '0');
+    const endDay = String(weekEnd.getDate()).padStart(2, '0');
+    const endMonth = String(weekEnd.getMonth() + 1).padStart(2, '0');
+    
+    sliderValue.textContent = `${startDay}/${startMonth} - ${endDay}/${endMonth}`;
+    
+    setTimeout(() => {
+        isUpdatingSlider = false;
+    }, 100);
+}
+
+// Navegar para uma semana específica baseada no valor do slider
+function navigateToWeek(sliderValue) {
+    const year = currentDate.getFullYear();
+    const weekOffset = parseInt(sliderValue);
+    
+    // Calcular a primeira semana do ano (domingo da primeira semana que contém 1º de janeiro)
+    const firstDayOfYear = new Date(year, 0, 1);
+    const firstDayOfWeek = firstDayOfYear.getDay();
+    const firstWeekStart = new Date(year, 0, 1 - firstDayOfWeek);
+    firstWeekStart.setHours(0, 0, 0, 0);
+    
+    // Calcular a data da semana desejada
+    const targetWeekStart = new Date(firstWeekStart);
+    targetWeekStart.setDate(firstWeekStart.getDate() + (weekOffset * 7));
+    
+    // Atualizar currentDate para o primeiro dia da semana
+    currentDate = new Date(targetWeekStart);
+    
+    // Carregar feriados do ano se necessário
+    if (!holidaysCache[year]) {
+        holidaysCache[year] = getHolidays(year);
+    }
+    
+    // Atualizar o display e calendário
+    updateMonthYearDisplay();
+    renderWeekView();
+    
+    // Atualizar o slider após um pequeno delay para evitar loop
+    setTimeout(() => {
+        updateWeekSlider();
+    }, 50);
+    
+    // Carregar tarefas para a nova semana
+    loadTodosForCurrentPeriod();
+}
+
 // Definir funções globais imediatamente para que estejam disponíveis nos atributos onclick
 window.changeMonth = function(direction) {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + direction;
-    // Criar nova data no primeiro dia do novo mês para evitar problemas com dias inválidos
-    currentDate = new Date(year, month, 1);
+    if (currentView === 'week') {
+        // No modo semanal, navegar por semanas
+        const daysToAdd = direction * 7;
+        currentDate = new Date(currentDate);
+        currentDate.setDate(currentDate.getDate() + daysToAdd);
+    } else {
+        // No modo mensal, navegar por meses
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + direction;
+        // Criar nova data no primeiro dia do novo mês para evitar problemas com dias inválidos
+        currentDate = new Date(year, month, 1);
+    }
+    
     // Carregar feriados do novo ano se necessário
     const newYear = currentDate.getFullYear();
     if (!holidaysCache[newYear]) {
@@ -117,6 +211,13 @@ window.goToToday = function() {
 window.setView = function(view) {
     currentView = view;
     loadTodosForCurrentPeriod();
+    
+    // Se mudou para visualização semanal, configurar o slider
+    if (view === 'week') {
+        setTimeout(() => {
+            setupWeekSlider();
+        }, 200);
+    }
 };
 
 window.closeDayModal = function() {
@@ -138,7 +239,121 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeCalendar();
     requestNotificationPermission();
     setupReminderCheck();
+    
+    // Configurar o slider de semanas
+    setupWeekSlider();
 });
+
+// Configurar o slider de semanas
+function setupWeekSlider() {
+    const weekSlider = document.getElementById('weekSlider');
+    if (!weekSlider) {
+        return;
+    }
+    
+    // Verificar se já tem eventos adicionados (evitar duplicação)
+    if (weekSlider.dataset.configured === 'true') {
+        return;
+    }
+    weekSlider.dataset.configured = 'true';
+    
+    // Obter ou criar tooltip dinâmico
+    let tooltip = document.getElementById('weekSliderTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'weekSliderTooltip';
+        tooltip.className = 'week-slider-tooltip';
+        tooltip.style.display = 'none';
+        document.body.appendChild(tooltip);
+    }
+    
+    // Evento de input (quando arrasta)
+    weekSlider.addEventListener('input', function() {
+        if (isUpdatingSlider) {
+            return;
+        }
+        const value = parseInt(this.value);
+        navigateToWeek(value);
+        updateTooltip(this, value, tooltip);
+    });
+    
+    // Função para calcular valor do slider baseado na posição do mouse
+    function getValueFromMouseEvent(slider, event) {
+        const rect = slider.getBoundingClientRect();
+        const percentage = (event.clientX - rect.left) / rect.width;
+        const min = parseInt(slider.min) || 0;
+        const max = parseInt(slider.max) || 52;
+        return Math.round(min + (percentage * (max - min)));
+    }
+    
+    // Evento de mousemove (para atualizar tooltip enquanto move o mouse sobre o slider)
+    weekSlider.addEventListener('mousemove', function(e) {
+        const value = getValueFromMouseEvent(this, e);
+        const clampedValue = Math.max(parseInt(this.min) || 0, Math.min(parseInt(this.max) || 52, value));
+        updateTooltip(this, clampedValue, tooltip, e);
+        tooltip.style.display = 'block';
+    });
+    
+    // Evento de mouseenter (mostrar tooltip)
+    weekSlider.addEventListener('mouseenter', function(e) {
+        const value = parseInt(this.value);
+        updateTooltip(this, value, tooltip, e);
+        tooltip.style.display = 'block';
+    });
+    
+    // Evento de mouseleave (esconder tooltip)
+    weekSlider.addEventListener('mouseleave', function() {
+        tooltip.style.display = 'none';
+    });
+    
+    // Evento de change (quando solta o mouse)
+    weekSlider.addEventListener('change', function() {
+        const value = parseInt(this.value);
+        updateTooltip(this, value, tooltip);
+    });
+}
+
+// Atualizar tooltip do slider
+function updateTooltip(slider, value, tooltip, event) {
+    if (!slider || !tooltip) {
+        return;
+    }
+    
+    const year = currentDate.getFullYear();
+    
+    // Calcular a primeira semana do ano
+    const firstDayOfYear = new Date(year, 0, 1);
+    const firstDayOfWeek = firstDayOfYear.getDay();
+    const firstWeekStart = new Date(year, 0, 1 - firstDayOfWeek);
+    firstWeekStart.setHours(0, 0, 0, 0);
+    
+    // Calcular a data da semana
+    const targetWeekStart = new Date(firstWeekStart);
+    targetWeekStart.setDate(firstWeekStart.getDate() + (value * 7));
+    
+    const weekEnd = new Date(targetWeekStart);
+    weekEnd.setDate(targetWeekStart.getDate() + 6);
+    
+    const startDay = String(targetWeekStart.getDate()).padStart(2, '0');
+    const startMonth = String(targetWeekStart.getMonth() + 1).padStart(2, '0');
+    const endDay = String(weekEnd.getDate()).padStart(2, '0');
+    const endMonth = String(weekEnd.getMonth() + 1).padStart(2, '0');
+    
+    tooltip.textContent = `Semana ${value + 1}: ${startDay}/${startMonth} - ${endDay}/${endMonth}`;
+    
+    // Posicionar tooltip
+    if (event) {
+        const rect = slider.getBoundingClientRect();
+        const min = parseInt(slider.min) || 0;
+        const max = parseInt(slider.max) || 52;
+        const percentage = (value - min) / (max - min);
+        const thumbPosition = rect.left + (percentage * rect.width);
+        
+        tooltip.style.left = thumbPosition + 'px';
+        tooltip.style.top = (rect.top - 45) + 'px';
+        tooltip.style.transform = 'translateX(-50%)';
+    }
+}
 
 // Inicializar calendário
 function initializeCalendar() {
@@ -233,6 +448,13 @@ function updateCalendar() {
         renderMonthView();
     } else {
         renderWeekView();
+        // Atualizar slider apenas se estiver no modo semanal
+        // Não atualizar durante a navegação para evitar loop
+        setTimeout(() => {
+            if (currentView === 'week') {
+                updateWeekSlider();
+            }
+        }, 100);
     }
     
     updateViewButtons();

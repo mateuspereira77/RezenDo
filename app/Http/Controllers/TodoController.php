@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\SharedTodoEditedNotification;
 use App\Notifications\TodoAssignedNotification;
 use App\Notifications\TodoCompletedNotification;
+use App\Notifications\TodoDeletedNotification;
 use App\Notifications\TodoOwnerEditedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -32,6 +33,29 @@ class TodoController extends Controller
         $todo->load(['assignedTo', 'user', 'sharedWith']);
 
         return view('todos.show', ['todo' => $todo]);
+    }
+
+    public function showHistory(int $id): View
+    {
+        $userId = auth()->id();
+
+        $todo = Todo::onlyTrashed()
+            ->where(function ($query) use ($userId) {
+                // Tarefas onde o usuário é o dono
+                $query->where('user_id', $userId)
+                    // Tarefas onde o usuário é o responsável
+                    ->orWhere('assigned_to', $userId)
+                    // Tarefas compartilhadas com permissão de escrita
+                    ->orWhereHas('sharedWith', function ($q) use ($userId) {
+                        $q->where('users.id', $userId)
+                            ->where('todo_user.permission', 'write');
+                    });
+            })
+            ->findOrFail($id);
+
+        $todo->load(['assignedTo', 'user', 'sharedWith']);
+
+        return view('todos.show', ['todo' => $todo, 'isDeleted' => true]);
     }
 
     public function edit(Todo $todo): View
@@ -121,6 +145,29 @@ class TodoController extends Controller
     {
         $this->authorize('delete', $todo);
 
+        // Só enviar notificações se o usuário for o dono da tarefa
+        if ($todo->user_id === auth()->id()) {
+            // Carregar relacionamentos necessários antes de deletar
+            $todo->load(['sharedWith', 'assignedTo', 'user']);
+
+            // Notificar usuários compartilhados
+            foreach ($todo->sharedWith as $user) {
+                // Não notificar o próprio criador
+                if ($user->id !== auth()->id()) {
+                    $user->notify(new TodoDeletedNotification($todo));
+                }
+            }
+
+            // Notificar usuário atribuído (se diferente do criador)
+            if ($todo->assignedTo && $todo->assignedTo->id !== auth()->id()) {
+                // Verificar se não está na lista de compartilhados para não duplicar
+                $isShared = $todo->sharedWith->contains('id', $todo->assignedTo->id);
+                if (! $isShared) {
+                    $todo->assignedTo->notify(new TodoDeletedNotification($todo));
+                }
+            }
+        }
+
         $todo->delete();
 
         return response()->json(['message' => 'Tarefa excluída com sucesso']);
@@ -187,6 +234,59 @@ class TodoController extends Controller
     public function calendar(): View
     {
         return view('todos.calendar');
+    }
+
+    public function history(): View
+    {
+        return view('todos.history');
+    }
+
+    public function getHistory(): JsonResponse
+    {
+        $userId = auth()->id();
+
+        $todos = Todo::onlyTrashed()
+            ->where(function ($query) use ($userId) {
+                // Tarefas onde o usuário é o dono
+                $query->where('user_id', $userId)
+                    // Tarefas onde o usuário é o responsável
+                    ->orWhere('assigned_to', $userId)
+                    // Tarefas compartilhadas com permissão de escrita
+                    ->orWhereHas('sharedWith', function ($q) use ($userId) {
+                        $q->where('users.id', $userId)
+                            ->where('todo_user.permission', 'write');
+                    });
+            })
+            ->with(['assignedTo', 'user', 'sharedWith'])
+            ->orderBy('deleted_at', 'desc')
+            ->get();
+
+        return response()->json($todos);
+    }
+
+    public function restore(int $id): JsonResponse
+    {
+        $todo = Todo::onlyTrashed()
+            ->where('user_id', auth()->id())
+            ->findOrFail($id);
+
+        $todo->restore();
+
+        return response()->json([
+            'message' => 'Tarefa restaurada com sucesso.',
+            'todo' => $todo,
+        ]);
+    }
+
+    public function forceDelete(int $id): JsonResponse
+    {
+        $todo = Todo::onlyTrashed()
+            ->where('user_id', auth()->id())
+            ->findOrFail($id);
+
+        $todo->forceDelete();
+
+        return response()->json(['message' => 'Tarefa excluída permanentemente.']);
     }
 
     public function getByDateRange(): JsonResponse

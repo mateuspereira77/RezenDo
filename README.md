@@ -197,6 +197,8 @@ Se preferir usar Docker:
   - Atribuição de responsáveis para tarefas
   - Visualização de tarefas compartilhadas e atribuídas
   - Gerenciamento de permissões de compartilhamento (visualizar ou editar)
+  - Permissões granulares: usuários compartilhados podem ter permissão de apenas visualizar (`read`) ou visualizar e editar (`write`)
+  - Apenas o dono da tarefa pode excluí-la (permissão de excluir para usuários compartilhados será implementada futuramente)
   - Notificações automáticas ao compartilhar tarefas
   - Notificações quando tarefas compartilhadas são editadas
   - Sistema completo de rastreamento de alterações em tarefas compartilhadas
@@ -212,7 +214,7 @@ Se preferir usar Docker:
 ### Planejadas para Implementação
 
 - 👥 **Colaboração Avançada**
-  - Permissões granulares de compartilhamento (visualizar, editar, excluir)
+  - Permissão de excluir para usuários compartilhados (atualmente apenas o dono pode excluir tarefas)
 
 - 🏷️ **Tags e Categorias**
   - Sistema de tags personalizadas

@@ -1274,3 +1274,119 @@ textarea:focus {
         max-width: 1900px !important;
     }
 }
+
+/* Estilos para o slider de semanas no calendário */
+.slider-week {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #e5e7eb;
+    outline: none;
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.slider-week:hover {
+    background: #d1d5db;
+}
+
+.slider-week::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #fb9e0b 0%, #fc6c04 100%);
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(251, 158, 11, 0.4);
+    transition: all 0.3s ease;
+}
+
+.slider-week::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 10px rgba(251, 158, 11, 0.6);
+    background: linear-gradient(135deg, #fc6c04 0%, #fb9e0b 100%);
+}
+
+.slider-week::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #fb9e0b 0%, #fc6c04 100%);
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 2px 6px rgba(251, 158, 11, 0.4);
+    transition: all 0.3s ease;
+}
+
+.slider-week::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 10px rgba(251, 158, 11, 0.6);
+    background: linear-gradient(135deg, #fc6c04 0%, #fb9e0b 100%);
+}
+
+.slider-week::-moz-range-track {
+    background: #e5e7eb;
+    border-radius: 10px;
+    height: 8px;
+}
+
+.slider-week::-moz-range-progress {
+    background: linear-gradient(90deg, #fb9e0b 0%, #fc6c04 100%);
+    border-radius: 10px;
+    height: 8px;
+}
+
+/* Responsividade do slider */
+@media (max-width: 640px) {
+    .slider-week {
+        height: 6px;
+    }
+    
+    .slider-week::-webkit-slider-thumb {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .slider-week::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Tooltip do slider de semanas */
+.week-slider-tooltip {
+    position: fixed;
+    background: linear-gradient(135deg, #212121 0%, #2a2a2a 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(251, 158, 11, 0.3);
+    border: 1px solid rgba(251, 158, 11, 0.4);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    transform-origin: center bottom;
+}
+
+.week-slider-tooltip[style*="display: block"] {
+    opacity: 1;
+}
+
+/* Seta do tooltip */
+.week-slider-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid #212121;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+}

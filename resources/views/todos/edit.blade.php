@@ -302,6 +302,57 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmação de Exclusão de Comentário -->
+    <div id="deleteCommentModal" class="hidden fixed inset-0 z-[9999]">
+        <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeDeleteCommentModal()"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-700">Excluir Comentário</h2>
+                    <button 
+                        onclick="closeDeleteCommentModal()"
+                        class="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 text-center text-base">
+                        Tem certeza que deseja excluir este comentário?
+                    </p>
+                    <p class="text-gray-500 text-center text-sm mt-2">
+                        Esta ação não pode ser desfeita.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button 
+                        onclick="confirmDeleteComment()"
+                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                        Excluir
+                    </button>
+                    <button 
+                        onclick="closeDeleteCommentModal()"
+                        class="flex-1 px-4 py-2.5 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast de Notificação -->
     <div id="toastNotification" class="toast-notification hidden fixed z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 transition-all">
         <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1296,21 +1347,46 @@
                 });
         };
 
+        let commentToDelete = null;
+
         window.deleteComment = function(commentId) {
-            if (!confirm('Deseja realmente excluir este comentário?')) {
+            commentToDelete = commentId;
+            document.getElementById('deleteCommentModal').classList.remove('hidden');
+        };
+
+        function closeDeleteCommentModal() {
+            commentToDelete = null;
+            document.getElementById('deleteCommentModal').classList.add('hidden');
+        }
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('deleteCommentModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeDeleteCommentModal();
+                }
+            }
+        });
+
+        function confirmDeleteComment() {
+            if (!commentToDelete) {
+                closeDeleteCommentModal();
                 return;
             }
 
-            window.axios.delete(`/api/todos/comments/${commentId}`)
+            window.axios.delete(`/api/todos/comments/${commentToDelete}`)
                 .then(response => {
                     showToast('Comentário excluído com sucesso!');
+                    closeDeleteCommentModal();
                     window.loadComments();
                 })
                 .catch(error => {
                     console.error('Erro ao excluir comentário:', error);
                     showToast('Erro ao excluir comentário', 'error');
+                    closeDeleteCommentModal();
                 });
-        };
+        }
 
         // Função para mostrar formulário de resposta
         window.showReplyForm = function(commentId) {

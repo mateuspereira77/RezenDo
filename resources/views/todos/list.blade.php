@@ -60,6 +60,12 @@
                 >
                     📅 Calendário
                 </a>
+                <a 
+                    href="{{ route('todos.history') }}"
+                    class="px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base w-full sm:w-auto text-center border-2 border-gray-300 hover:bg-gray-50"
+                >
+                    📜 Meu Histórico
+                </a>
             </div>
         </div>
         
@@ -259,7 +265,7 @@
                         Tem certeza que deseja excluir esta tarefa?
                     </p>
                     <p class="text-gray-500 text-center text-sm mt-2">
-                        Esta ação não pode ser desfeita.
+                        A tarefa será movida para o histórico e poderá ser restaurada posteriormente.
                     </p>
                 </div>
                 

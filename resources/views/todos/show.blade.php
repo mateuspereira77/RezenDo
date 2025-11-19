@@ -16,7 +16,14 @@
             >
                 ← Voltar
             </button>
-            @if($todo->user_id === auth()->id() || $todo->hasWritePermission(auth()->id()))
+            @if(isset($isDeleted) && $isDeleted)
+                <a 
+                    href="{{ route('todos.history') }}"
+                    class="px-6 py-3 rounded-lg font-semibold transition-colors text-sm border-2 border-gray-300 hover:bg-gray-50"
+                >
+                    📜 Voltar ao Histórico
+                </a>
+            @elseif($todo->user_id === auth()->id() || $todo->hasWritePermission(auth()->id()))
                 <a 
                     href="{{ route('todos.edit', $todo) }}"
                     class="custom-btn-primary px-6 py-3 rounded-lg font-semibold transition-colors text-sm"
@@ -25,6 +32,25 @@
                 </a>
             @endif
         </div>
+
+        @if(isset($isDeleted) && $isDeleted)
+            <div class="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <p class="font-semibold text-yellow-800">Esta tarefa está excluída</p>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Excluída em: {{ $todo->deleted_at->format('d/m/Y H:i') }}
+                        </p>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Você pode visualizar os detalhes e comentários, mas não pode editar ou alterar o status.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Card da Tarefa -->
         <div class="main-card-bg rounded-lg shadow-md p-6 mb-6">
@@ -87,7 +113,7 @@
                 </div>
             @endif
 
-            @if($todo->user_id === auth()->id())
+            @if($todo->user_id === auth()->id() && !(isset($isDeleted) && $isDeleted))
                 <div class="mt-6 pt-4 border-t border-gray-200">
                     <button 
                         onclick="toggleTodoCompletion()"
@@ -104,32 +130,40 @@
         <div class="main-card-bg rounded-lg shadow-md p-6">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">💬 Comentários</h2>
             
-            <!-- Formulário de Comentário -->
-            <div class="mb-4 p-4 bg-gray-50 rounded-lg relative">
-                <div class="relative">
-                    <textarea 
-                        id="commentContent" 
-                        rows="3"
-                        maxlength="1000"
-                        placeholder="Adicione um comentário... (use @ para mencionar usuários)"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none"
-                    ></textarea>
-                    <!-- Dropdown de sugestões de usuários -->
-                    <div id="userSuggestions" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50" style="top: 100%; left: 0; margin-top: 5px; width: 100%; max-width: 100%;">
-                        <!-- Sugestões serão inseridas aqui -->
+            @if(!(isset($isDeleted) && $isDeleted))
+                <!-- Formulário de Comentário -->
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg relative">
+                    <div class="relative">
+                        <textarea 
+                            id="commentContent" 
+                            rows="3"
+                            maxlength="1000"
+                            placeholder="Adicione um comentário... (use @ para mencionar usuários)"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus resize-none"
+                        ></textarea>
+                        <!-- Dropdown de sugestões de usuários -->
+                        <div id="userSuggestions" class="hidden absolute bg-white border border-gray-300 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50" style="top: 100%; left: 0; margin-top: 5px; width: 100%; max-width: 100%;">
+                            <!-- Sugestões serão inseridas aqui -->
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        <span id="commentCounter" class="text-xs text-gray-500">0 / 1000 caracteres</span>
+                        <button 
+                            type="button"
+                            onclick="addComment()"
+                            class="bg-gradient-to-r from-[#fb9e0b] to-[#fc6c04] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity text-sm"
+                        >
+                            Adicionar Comentário
+                        </button>
                     </div>
                 </div>
-                <div class="flex justify-between items-center mt-2">
-                    <span id="commentCounter" class="text-xs text-gray-500">0 / 1000 caracteres</span>
-                    <button 
-                        type="button"
-                        onclick="addComment()"
-                        class="bg-gradient-to-r from-[#fb9e0b] to-[#fc6c04] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity text-sm"
-                    >
-                        Adicionar Comentário
-                    </button>
+            @else
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <p class="text-sm text-gray-500 text-center">
+                        Não é possível adicionar comentários em tarefas excluídas.
+                    </p>
                 </div>
-            </div>
+            @endif
 
             <!-- Lista de Comentários -->
             <div id="commentsList" class="space-y-3">
@@ -201,6 +235,57 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmação de Exclusão de Comentário -->
+    <div id="deleteCommentModal" class="hidden fixed inset-0 z-[9999]">
+        <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeDeleteCommentModal()"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-700">Excluir Comentário</h2>
+                    <button 
+                        onclick="closeDeleteCommentModal()"
+                        class="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 text-center text-base">
+                        Tem certeza que deseja excluir este comentário?
+                    </p>
+                    <p class="text-gray-500 text-center text-sm mt-2">
+                        Esta ação não pode ser desfeita.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button 
+                        onclick="confirmDeleteComment()"
+                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                        Excluir
+                    </button>
+                    <button 
+                        onclick="closeDeleteCommentModal()"
+                        class="flex-1 px-4 py-2.5 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast de Notificação -->
     <div id="toastNotification" class="toast-notification hidden fixed z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 transition-all">
         <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,12 +303,15 @@
         const todoId = {{ $todo->id }};
         const currentUserId = {{ auth()->id() }};
         const isTodoOwner = {{ $todo->user_id === auth()->id() ? 'true' : 'false' }};
+        const isDeleted = {{ isset($isDeleted) && $isDeleted ? 'true' : 'false' }};
         let todoCompleted = {{ $todo->completed ? 'true' : 'false' }};
 
         // Carregar comentários ao carregar a página
         document.addEventListener('DOMContentLoaded', function() {
             loadComments();
-            setupCommentCounter();
+            if (!isDeleted) {
+                setupCommentCounter();
+            }
         });
 
         function toggleTodoCompletion() {
@@ -592,13 +680,20 @@
         }
 
         function loadComments() {
-            window.axios.get(`/api/todos/${todoId}/comments`)
+            const commentsUrl = isDeleted 
+                ? `/api/todos/history/${todoId}/comments`
+                : `/api/todos/${todoId}/comments`;
+            
+            window.axios.get(commentsUrl)
                 .then(response => {
                     const comments = response.data;
                     const listDiv = document.getElementById('commentsList');
                     
                     if (comments.length === 0) {
-                        listDiv.innerHTML = '<p class="text-sm text-gray-500">Nenhum comentário ainda. Seja o primeiro a comentar!</p>';
+                        const message = isDeleted 
+                            ? '<p class="text-sm text-gray-500">Nenhum comentário nesta tarefa.</p>'
+                            : '<p class="text-sm text-gray-500">Nenhum comentário ainda. Seja o primeiro a comentar!</p>';
+                        listDiv.innerHTML = message;
                     } else {
                         // Função auxiliar para escapar HTML
                         function escapeHtml(text) {
@@ -628,8 +723,8 @@
                         
                         listDiv.innerHTML = comments.map(comment => {
                             const isOwner = comment.user_id === currentUserId;
-                            const canEdit = isOwner;
-                            const canDelete = isOwner || isTodoOwner;
+                            const canEdit = isOwner && !isDeleted;
+                            const canDelete = (isOwner || isTodoOwner) && !isDeleted;
                             
                             // Verificar se foi editado
                             const createdDate = new Date(comment.created_at);
@@ -649,8 +744,8 @@
                                 
                                 return replies.map(reply => {
                                     const replyIsOwner = reply.user_id === currentUserId;
-                                    const replyCanEdit = replyIsOwner;
-                                    const replyCanDelete = replyIsOwner || isTodoOwner;
+                                    const replyCanEdit = replyIsOwner && !isDeleted;
+                                    const replyCanDelete = (replyIsOwner || isTodoOwner) && !isDeleted;
                                     
                                     const replyCreatedDate = new Date(reply.created_at);
                                     const replyUpdatedDate = new Date(reply.updated_at);
@@ -685,6 +780,7 @@
                                             <div class="text-gray-700 text-sm whitespace-pre-wrap mb-2" id="comment-content-${reply.id}">${processMentions(reply.content, reply.mentions || [])}</div>
                                             <input type="hidden" id="comment-original-${reply.id}" value="${escapeHtml(reply.content)}">
                                             
+                                            ${!isDeleted ? `
                                             <div class="flex items-center gap-4 mb-2">
                                                 <button onclick="showReplyForm(${reply.id})" class="text-gray-600 hover:text-gray-800 text-xs font-medium">
                                                     💬 Responder
@@ -706,6 +802,7 @@
                                                     </button>
                                                 </div>
                                             </div>
+                                            ` : ''}
                                             
                                             ${replyRepliesHtml ? `<div class="mt-3">${replyRepliesHtml}</div>` : ''}
                                         </div>
@@ -735,6 +832,7 @@
                                     <div class="text-gray-700 whitespace-pre-wrap mb-2" id="comment-content-${comment.id}">${processMentions(comment.content, comment.mentions || [])}</div>
                                     <input type="hidden" id="comment-original-${comment.id}" value="${escapeHtml(comment.content)}">
                                     
+                                    ${!isDeleted ? `
                                     <div class="flex items-center gap-4 mb-2">
                                         <button onclick="showReplyForm(${comment.id})" class="text-gray-600 hover:text-gray-800 text-sm font-medium">
                                             💬 Responder
@@ -753,10 +851,11 @@
                                             </button>
                                             <button onclick="hideReplyForm(${comment.id})" class="px-4 py-1.5 bg-gray-500 text-white text-sm font-semibold rounded-lg hover:bg-gray-600 transition-colors">
                                                 Cancelar
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
+                                                    </button>
+                                                </div>
+                                            </div>
+                                    ` : ''}
+                                            
                                     ${repliesHtml ? `<div class="mt-3">${repliesHtml}</div>` : ''}
                                 </div>
                             `;
@@ -861,19 +960,44 @@
             });
         });
 
+        let commentToDelete = null;
+
         function deleteComment(commentId) {
-            if (!confirm('Deseja realmente excluir este comentário?')) {
+            commentToDelete = commentId;
+            document.getElementById('deleteCommentModal').classList.remove('hidden');
+        }
+
+        function closeDeleteCommentModal() {
+            commentToDelete = null;
+            document.getElementById('deleteCommentModal').classList.add('hidden');
+        }
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('deleteCommentModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeDeleteCommentModal();
+                }
+            }
+        });
+
+        function confirmDeleteComment() {
+            if (!commentToDelete) {
+                closeDeleteCommentModal();
                 return;
             }
 
-            window.axios.delete(`/api/todos/comments/${commentId}`)
+            window.axios.delete(`/api/todos/comments/${commentToDelete}`)
                 .then(response => {
                     showToast('Comentário excluído com sucesso!');
+                    closeDeleteCommentModal();
                     loadComments();
                 })
                 .catch(error => {
                     console.error('Erro ao excluir comentário:', error);
                     showToast('Erro ao excluir comentário', 'error');
+                    closeDeleteCommentModal();
                 });
         }
 
