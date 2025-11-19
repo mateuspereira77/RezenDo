@@ -120,9 +120,19 @@ Se preferir usar Docker:
 - ✅ **Gerenciamento de Tarefas**
   - Visualização de todas as tarefas em formato de post-its coloridos
   - Edição completa de tarefas
-  - Exclusão de tarefas individuais
+  - Exclusão de tarefas individuais (soft delete - movidas para histórico)
   - Marcar tarefas como concluídas/pendentes
   - Alteração de prioridade
+  - **Histórico de Tarefas Deletadas**
+    - Visualização de todas as tarefas excluídas
+    - Filtro para ver "Todas" ou apenas "Minhas tarefas"
+    - Visualização completa de tarefas deletadas (detalhes e comentários)
+    - Restauração de tarefas do histórico
+    - Exclusão permanente de tarefas
+    - Badges visuais indicando relação com a tarefa (Responsável, Compartilhada, etc.)
+    - Informação sobre quem excluiu a tarefa
+    - Comentários visíveis em tarefas deletadas (somente leitura)
+    - Apenas o dono pode restaurar ou excluir permanentemente
 
 - ✅ **Filtros e Organização**
   - Filtrar por: Todas, A Concluir, Concluídas
@@ -158,11 +168,13 @@ Se preferir usar Docker:
 - ✅ **Sistema de Comentários**
   - Comentários em tarefas com suporte a respostas aninhadas
   - Edição e exclusão de comentários próprios
+  - Modal de confirmação estilizado para exclusão de comentários
   - Ordenação inteligente: posts mais recentemente comentados aparecem no topo
   - Interface limpa com comentários exibidos verticalmente (sem indentação visual)
   - Indicador visual discreto para identificar respostas
   - Contador de caracteres em tempo real (máximo 1000 caracteres)
   - Permissões: apenas o autor pode editar, autor ou dono da tarefa podem excluir
+  - Comentários visíveis em tarefas deletadas (somente leitura)
   - **Sistema de Menções (@usuario)**
     - Menções de usuários em comentários usando @nome
     - Dropdown de sugestões ao digitar @
@@ -191,6 +203,7 @@ Se preferir usar Docker:
     - Notificação quando uma tarefa é compartilhada com você
     - Notificação quando o dono edita uma tarefa compartilhada com você
     - Notificação quando outro colaborador edita uma tarefa compartilhada
+    - Notificação quando o dono exclui uma tarefa (para responsáveis e usuários compartilhados)
 
 - ✅ **Colaboração e Compartilhamento**
   - Compartilhamento de tarefas entre usuários
@@ -202,12 +215,21 @@ Se preferir usar Docker:
   - Notificações automáticas ao compartilhar tarefas
   - Notificações quando tarefas compartilhadas são editadas
   - Sistema completo de rastreamento de alterações em tarefas compartilhadas
+  - **Histórico de Tarefas Compartilhadas/Atribuídas**
+    - Visualização de tarefas deletadas onde você é responsável ou tem compartilhamento
+    - Filtro para ver apenas suas tarefas excluídas ou todas as relacionadas
+    - Badges visuais indicando tipo de relação (Responsável, Compartilhada, etc.)
+    - Visualização completa de tarefas compartilhadas deletadas (sem edição)
+    - Comentários visíveis em tarefas compartilhadas deletadas
 
 - ✅ **Interface e UX Melhoradas**
   - Modal de confirmação de exclusão estilizado (substituindo alertas padrão)
+  - Modal de confirmação de exclusão de comentários com design moderno
   - Design moderno e intuitivo para todas as ações de confirmação
   - Feedback visual claro para todas as ações do usuário
   - Manutenção de estado ao editar tarefas (prioridade, data, etc.)
+  - Fechamento de modais com tecla ESC
+  - Fechamento de modais clicando fora (backdrop)
 
 ## 🔮 Funcionalidades Futuras
 
