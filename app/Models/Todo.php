@@ -21,6 +21,7 @@ class Todo extends Model
         'priority',
         'day',
         'date',
+        'end_date',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class Todo extends Model
         return [
             'completed' => 'boolean',
             'date' => 'date',
+            'end_date' => 'date',
             'priority' => Priority::class,
         ];
     }
@@ -53,6 +55,22 @@ class Todo extends Model
      */
     public function scopeOrderByPriority(Builder $query): Builder
     {
+        $driver = config('database.default');
+        $connection = config("database.connections.{$driver}.driver");
+
+        if ($connection === 'sqlite') {
+            // SQLite: usar CASE WHEN
+            return $query->orderByRaw("
+                CASE 
+                    WHEN priority = 'urgent' THEN 1
+                    WHEN priority = 'medium' THEN 2
+                    WHEN priority = 'simple' THEN 3
+                    ELSE 4
+                END
+            ");
+        }
+
+        // MySQL/PostgreSQL: usar CASE WHEN
         return $query->orderByRaw("
             CASE 
                 WHEN priority = 'urgent' THEN 1

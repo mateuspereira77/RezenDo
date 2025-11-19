@@ -83,8 +83,14 @@
                 </div>
                 @if($todo->date)
                     <div>
-                        <span class="text-gray-500">Data:</span>
+                        <span class="text-gray-500">Data de Início:</span>
                         <span class="ml-2 font-semibold text-gray-700">{{ $todo->date->format('d/m/Y') }}</span>
+                    </div>
+                @endif
+                @if($todo->end_date)
+                    <div>
+                        <span class="text-gray-500">Data de Término:</span>
+                        <span class="ml-2 font-semibold text-gray-700">{{ $todo->end_date->format('d/m/Y') }}</span>
                     </div>
                 @endif
                 @if($todo->assignedTo)
@@ -475,7 +481,8 @@
                         console.error('Dropdown ou textarea não encontrado:', { suggestionsDiv: !!suggestionsDiv, textarea: !!textarea });
                     }
                     
-                    searchUsers(currentMentionQuery, suggestionsId, textarea);
+                    // Buscar usuários mesmo se a query estiver vazia (apenas @ digitado)
+                    searchUsers(currentMentionQuery || '', suggestionsId, textarea);
                     return;
                 }
             }
@@ -488,7 +495,15 @@
                 textarea = document.getElementById('commentContent');
             }
             
-            window.axios.get('/api/users/search', { params: { q: query || '' } })
+            // Remover @ do início da query se existir
+            let cleanQuery = query || '';
+            if (cleanQuery.startsWith('@')) {
+                cleanQuery = cleanQuery.substring(1).trim();
+            }
+            
+            // Se não houver query após remover o @, buscar todos os usuários (query vazia)
+            // O backend retornará todos os usuários quando a query estiver vazia
+            window.axios.get('/api/users/search', { params: { q: cleanQuery } })
                 .then(response => {
                     showUserSuggestions(response.data, suggestionsId, textarea);
                 })

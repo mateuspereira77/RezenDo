@@ -58,6 +58,7 @@
                         </div>
                     </div>
                     
+                    <a href="{{ route('help.index') }}" class="text-sm text-gray-700 hover:text-[#fb9e0b] font-medium transition-colors">📚 Ajuda</a>
                     <span class="text-sm text-gray-700">Olá, <strong>{{ Auth::user()->name }}</strong></span>
                     <form method="POST" action="{{ route('logout') }}" class="inline">
                         @csrf
@@ -148,7 +149,7 @@
                 
                 <div>
                     <label for="todoDate" class="block text-sm font-medium text-gray-700 mb-2">
-                        Data da Tarefa (opcional)
+                        Data de Início (opcional)
                     </label>
                     <input 
                         type="text" 
@@ -159,7 +160,23 @@
                         placeholder="DD/MM/AAAA"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus"
                     >
-                            <p class="text-xs text-gray-500 mt-1">Digite a data no formato DD/MM/AAAA ou DD/MM/AA</p>
+                    <p class="text-xs text-gray-500 mt-1">Digite a data no formato DD/MM/AAAA ou DD/MM/AA</p>
+                </div>
+                
+                <div>
+                    <label for="todoEndDate" class="block text-sm font-medium text-gray-700 mb-2">
+                        Data de Término (opcional)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="todoEndDate" 
+                        name="end_date"
+                        data-date-mask
+                        maxlength="10"
+                        placeholder="DD/MM/AAAA"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Digite a data no formato DD/MM/AAAA ou DD/MM/AA</p>
                 </div>
                 
                 <button 
@@ -201,6 +218,16 @@
                     class="inline-block custom-btn-primary px-8 py-3 rounded-lg font-semibold transition-colors"
                 >
                     📜 Ver Histórico
+                </a>
+            </div>
+            <div class="main-card-bg rounded-lg shadow-md p-6 text-center">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-700">Minha Produtividade</h2>
+                <p class="text-gray-600 mb-6">Acompanhe suas estatísticas e gráficos</p>
+                <a 
+                    href="{{ route('todos.productivity') }}"
+                    class="inline-block custom-btn-primary px-8 py-3 rounded-lg font-semibold transition-colors"
+                >
+                    📊 Ver Produtividade
                 </a>
             </div>
         </div>

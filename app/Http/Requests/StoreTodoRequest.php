@@ -28,6 +28,15 @@ class StoreTodoRequest extends FormRequest
             'priority' => ['required', 'in:simple,medium,urgent'],
             'day' => ['nullable', 'string'],
             'date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', function ($attribute, $value, $fail) {
+                if ($value && $this->input('date')) {
+                    $startDate = \Carbon\Carbon::parse($this->input('date'));
+                    $endDate = \Carbon\Carbon::parse($value);
+                    if ($endDate->lt($startDate)) {
+                        $fail('A data de término deve ser posterior ou igual à data de início.');
+                    }
+                }
+            }],
             'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }

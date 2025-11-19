@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/minhas-tarefas', [TodoController::class, 'list'])->name('todos.list');
     Route::get('/calendario', [TodoController::class, 'calendar'])->name('todos.calendar');
     Route::get('/meu-historico', [TodoController::class, 'history'])->name('todos.history');
+    Route::get('/minha-produtividade', [TodoController::class, 'productivity'])->name('todos.productivity');
+    Route::get('/ajuda', [TodoController::class, 'help'])->name('help.index');
     Route::get('/todos/history/{id}', [TodoController::class, 'showHistory'])->where('id', '[0-9]+')->name('todos.showHistory');
     Route::get('/todos/{todo}', [TodoController::class, 'show'])->name('todos.show');
     Route::get('/todos/{todo}/edit', [TodoController::class, 'edit'])->name('todos.edit');
@@ -32,7 +34,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
         Route::patch('/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
         Route::patch('/{todo}/priority', [TodoController::class, 'changePriority'])->name('todos.changePriority');
-        
+
         // Rotas de histórico
         Route::get('/history/all', [TodoController::class, 'getHistory'])->name('todos.history.all');
         Route::post('/history/{id}/restore', [TodoController::class, 'restore'])->name('todos.history.restore');

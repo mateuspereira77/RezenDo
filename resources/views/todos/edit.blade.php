@@ -85,7 +85,7 @@
                 
                 <div>
                     <label for="todoDate" class="block text-sm font-medium text-gray-700 mb-2">
-                        Data da Tarefa (opcional)
+                        Data de Início (opcional)
                     </label>
                     <input 
                         type="text" 
@@ -95,6 +95,23 @@
                         maxlength="10"
                         placeholder="DD/MM/AAAA"
                         value="{{ $todo->date ? $todo->date->format('d/m/Y') : '' }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Digite a data no formato DD/MM/AAAA ou DD/MM/AA</p>
+                </div>
+                
+                <div>
+                    <label for="todoEndDate" class="block text-sm font-medium text-gray-700 mb-2">
+                        Data de Término (opcional)
+                    </label>
+                    <input 
+                        type="text" 
+                        id="todoEndDate" 
+                        name="end_date"
+                        data-date-mask
+                        maxlength="10"
+                        placeholder="DD/MM/AAAA"
+                        value="{{ $todo->end_date ? $todo->end_date->format('d/m/Y') : '' }}"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus"
                     >
                     <p class="text-xs text-gray-500 mt-1">Digite a data no formato DD/MM/AAAA ou DD/MM/AA</p>
@@ -171,7 +188,7 @@
                             <input 
                                 type="text" 
                                 id="shareUserSearch" 
-                                placeholder="Buscar usuário por nome ou email..."
+                                placeholder="Buscar usuário por nome ou email... (use @ para buscar)"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none custom-focus"
                                 autocomplete="off"
                             >
@@ -597,6 +614,36 @@
                 
                 const dateValue = todoDate && todoDate.value.trim() ? convertBRToISO(todoDate.value.trim()) : null;
                 
+                const todoEndDate = document.getElementById('todoEndDate');
+                let endDateValue = null;
+                
+                if (todoEndDate && todoEndDate.value.trim()) {
+                    const endDateInput = todoEndDate.value.trim();
+                    endDateValue = convertBRToISO(endDateInput);
+                    
+                    if (endDateValue === 'INVALID') {
+                        e.preventDefault();
+                        alert('Por favor, insira uma data de término válida no formato DD/MM/AAAA ou DD/MM/AA.');
+                        todoEndDate.focus();
+                        return;
+                    }
+                    
+                    if (endDateValue === null) {
+                        e.preventDefault();
+                        alert('Formato de data de término inválido. Use DD/MM/AAAA ou DD/MM/AA.');
+                        todoEndDate.focus();
+                        return;
+                    }
+                    
+                    // Validar se a data de término é posterior ou igual à data de início
+                    if (dateValue && endDateValue && endDateValue < dateValue) {
+                        e.preventDefault();
+                        alert('A data de término deve ser posterior ou igual à data de início.');
+                        todoEndDate.focus();
+                        return;
+                    }
+                }
+                
                 // Buscar o campo novamente no momento do submit para garantir que temos o valor mais recente
                 const assignedToInput = document.getElementById('assignedTo');
                 console.log('🔍 DEBUG - Campo assignedToInput encontrado:', !!assignedToInput);
@@ -636,6 +683,7 @@
                         return currentPriority;
                     })(),
                     date: dateValue,
+                    end_date: endDateValue,
                     assigned_to: assignedToFinal,
                 };
                 
@@ -975,8 +1023,15 @@
 
         if (shareUserSearch) {
             shareUserSearch.addEventListener('input', function() {
-                const query = this.value.trim();
-                if (query.length < 2) {
+                let query = this.value.trim();
+                
+                // Remover @ do início da query se existir
+                if (query.startsWith('@')) {
+                    query = query.substring(1).trim();
+                }
+                
+                // Se não houver query após remover o @, não fazer busca
+                if (query.length < 1) {
                     shareUserResults.classList.add('hidden');
                     selectedShareUser = null;
                     return;

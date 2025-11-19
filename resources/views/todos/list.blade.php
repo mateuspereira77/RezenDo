@@ -202,11 +202,26 @@
                         
                         <div>
                             <label for="editTodoDate" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                Data da Tarefa (opcional)
+                                Data de Início (opcional)
                             </label>
                             <input 
                                 type="text" 
                                 id="editTodoDate" 
+                                data-date-mask
+                                maxlength="10"
+                                placeholder="DD/MM/AAAA"
+                                class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none custom-focus text-sm sm:text-base"
+                            >
+                            <p class="text-xs text-gray-500 mt-1">Digite a data no formato DD/MM/AAAA ou DD/MM/AA</p>
+                        </div>
+                        
+                        <div>
+                            <label for="editTodoEndDate" class="block text-sm font-medium text-gray-700 mb-1.5">
+                                Data de Término (opcional)
+                            </label>
+                            <input 
+                                type="text" 
+                                id="editTodoEndDate" 
                                 data-date-mask
                                 maxlength="10"
                                 placeholder="DD/MM/AAAA"

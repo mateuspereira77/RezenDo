@@ -17,6 +17,8 @@ class UserController extends Controller
 
         $usersQuery = User::where('id', '!=', auth()->id());
 
+        // Se houver query, filtrar por nome ou email
+        // Se não houver query (apenas @ digitado), retornar todos os usuários
         if (strlen($query) >= 1) {
             $usersQuery->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")

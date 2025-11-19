@@ -114,7 +114,9 @@ Se preferir usar Docker:
   - Título (até 200 caracteres)
   - Descrição opcional (até 500 caracteres)
   - Sistema de prioridades (Simples, Média, Urgente)
-  - Data opcional com suporte a formato brasileiro (DD/MM/AAAA ou DD/MM/AA)
+  - Data de início opcional com suporte a formato brasileiro (DD/MM/AAAA ou DD/MM/AA)
+  - Data de término opcional (prazo final da tarefa)
+  - Validação automática: data de término deve ser posterior ou igual à data de início
   - Contadores de caracteres em tempo real
 
 - ✅ **Gerenciamento de Tarefas**
@@ -123,6 +125,10 @@ Se preferir usar Docker:
   - Exclusão de tarefas individuais (soft delete - movidas para histórico)
   - Marcar tarefas como concluídas/pendentes
   - Alteração de prioridade
+  - **Ordenação Inteligente por Prioridade**
+    - Tarefas ordenadas automaticamente por prioridade (Urgente → Média → Simples)
+    - Ordenação secundária por atividade mais recente
+    - Facilita visualização das tarefas mais importantes
   - **Histórico de Tarefas Deletadas**
     - Visualização de todas as tarefas excluídas
     - Filtro para ver "Todas" ou apenas "Minhas tarefas"
@@ -138,6 +144,7 @@ Se preferir usar Docker:
   - Filtrar por: Todas, A Concluir, Concluídas
   - Estatísticas de tarefas (total, pendentes, concluídas)
   - Exclusão em lote de tarefas concluídas
+  - Mensagens de erro claras: "Somente o dono da tarefa pode excluí-la" quando não autorizado
 
 - ✅ **Interface Moderna**
   - Design inspirado em post-its com rotação aleatória
@@ -177,7 +184,8 @@ Se preferir usar Docker:
   - Comentários visíveis em tarefas deletadas (somente leitura)
   - **Sistema de Menções (@usuario)**
     - Menções de usuários em comentários usando @nome
-    - Dropdown de sugestões ao digitar @
+    - Dropdown de sugestões ao digitar @ (funciona mesmo digitando apenas "@")
+    - Busca inteligente: mostra todos os usuários ao digitar "@" e filtra conforme você digita
     - Suporte a nomes compostos
     - Notificações automáticas para usuários mencionados
     - Destaque visual de menções nos comentários
@@ -212,9 +220,14 @@ Se preferir usar Docker:
   - Gerenciamento de permissões de compartilhamento (visualizar ou editar)
   - Permissões granulares: usuários compartilhados podem ter permissão de apenas visualizar (`read`) ou visualizar e editar (`write`)
   - Apenas o dono da tarefa pode excluí-la (permissão de excluir para usuários compartilhados será implementada futuramente)
+  - Mensagens de erro claras: "Somente o dono da tarefa pode excluí-la" quando não autorizado
   - Notificações automáticas ao compartilhar tarefas
   - Notificações quando tarefas compartilhadas são editadas
   - Sistema completo de rastreamento de alterações em tarefas compartilhadas
+  - **Busca Inteligente de Usuários**
+    - Busca de usuários para compartilhamento usando "@" ou nome/email
+    - Dropdown de sugestões ao digitar (funciona mesmo digitando apenas "@")
+    - Busca em tempo real conforme você digita
   - **Histórico de Tarefas Compartilhadas/Atribuídas**
     - Visualização de tarefas deletadas onde você é responsável ou tem compartilhamento
     - Filtro para ver apenas suas tarefas excluídas ou todas as relacionadas
@@ -230,23 +243,39 @@ Se preferir usar Docker:
   - Manutenção de estado ao editar tarefas (prioridade, data, etc.)
   - Fechamento de modais com tecla ESC
   - Fechamento de modais clicando fora (backdrop)
+  - **Página de Ajuda e Tutorial**
+    - Guia completo de uso da aplicação
+    - Seções organizadas: Básico, Criar Tarefas, Editar, Calendário, Compartilhar, Comentários, Histórico, Produtividade
+    - Suporte a imagens/screenshots para demonstração visual
+    - FAQ com perguntas frequentes
+    - Dicas e truques organizados por categoria
+    - Navegação rápida com índice clicável
+    - Design responsivo e moderno
 
 ## 🔮 Funcionalidades Futuras
 
 ### Planejadas para Implementação
-
-- 👥 **Colaboração Avançada**
-  - Permissão de excluir para usuários compartilhados (atualmente apenas o dono pode excluir tarefas)
 
 - 🏷️ **Tags e Categorias**
   - Sistema de tags personalizadas
   - Categorização de tarefas
   - Filtros por tags
 
-- 📊 **Relatórios e Estatísticas**
-  - Dashboard com gráficos de produtividade
-  - Relatórios de conclusão de tarefas
-  - Análise de tempo gasto por tarefa
+- 📊 **Relatórios Avançados**
+  - **Relatórios de Conclusão de Tarefas**
+    - Relatório semanal: tarefas criadas, concluídas e pendentes na semana
+    - Relatório mensal: resumo completo do mês com estatísticas detalhadas
+    - Relatório anual: visão geral do ano com tendências e padrões
+    - Filtros por período (últimos 7 dias, 30 dias, 3 meses, 6 meses, 1 ano)
+    - Exportação de relatórios em PDF ou CSV
+    - Comparação de períodos (ex: este mês vs mês anterior)
+  - **Análise de Tempo Gasto por Tarefa**
+    - Rastreamento automático do tempo desde criação até conclusão
+    - Tempo médio de conclusão por prioridade
+    - Identificação de tarefas que demoram mais para serem concluídas
+    - Gráfico de distribuição de tempo (rápidas, médias, demoradas)
+    - Análise de produtividade por horário do dia
+    - Sugestões de otimização baseadas em padrões identificados
 
 - 🔔 **Notificações Avançadas**
   - Notificações por email

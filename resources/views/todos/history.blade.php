@@ -354,7 +354,13 @@
                 loadHistory();
             } catch (error) {
                 console.error('Erro ao excluir permanentemente:', error);
-                showToast('Erro ao excluir tarefa. Tente novamente.', 'error');
+                
+                // Verificar se é erro de autorização (403)
+                if (error.response && error.response.status === 403) {
+                    showToast('Somente o dono da tarefa pode excluí-la permanentemente.', 'error');
+                } else {
+                    showToast('Erro ao excluir tarefa. Tente novamente.', 'error');
+                }
             }
         }
 

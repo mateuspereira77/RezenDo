@@ -514,14 +514,25 @@ function renderTodos() {
                         </div>
                     ` : ''}
                     ${(() => {
-                        if (!todo.date || todo.date === null || todo.date === '') return '';
-                        const formattedDate = formatDateBR(todo.date);
-                        if (!formattedDate) return '';
+                        if ((!todo.date || todo.date === null || todo.date === '') && (!todo.end_date || todo.end_date === null || todo.end_date === '')) return '';
+                        let dateHtml = '';
+                        if (todo.date && todo.date !== null && todo.date !== '') {
+                            const formattedDate = formatDateBR(todo.date);
+                            if (formattedDate) {
+                                dateHtml += `<span class="text-xs text-gray-600 font-medium">📅 Início: ${formattedDate}</span>`;
+                            }
+                        }
+                        if (todo.end_date && todo.end_date !== null && todo.end_date !== '') {
+                            const formattedEndDate = formatDateBR(todo.end_date);
+                            if (formattedEndDate) {
+                                if (dateHtml) dateHtml += '<br>';
+                                dateHtml += `<span class="text-xs text-gray-600 font-medium">🏁 Término: ${formattedEndDate}</span>`;
+                            }
+                        }
+                        if (!dateHtml) return '';
                         return `
                             <div class="post-it-date mb-2">
-                                <span class="text-xs text-gray-600 font-medium">
-                                    📅 ${formattedDate}
-                                </span>
+                                ${dateHtml}
                             </div>
                         `;
                     })()}
@@ -593,7 +604,9 @@ async function handleSubmit(e) {
 // Criar nova tarefa
 async function createTodo() {
     const todoDate = document.getElementById('todoDate');
+    const todoEndDate = document.getElementById('todoEndDate');
     let dateValue = null;
+    let endDateValue = null;
     
     if (todoDate && todoDate.value.trim()) {
         const dateInput = todoDate.value.trim();
@@ -615,6 +628,33 @@ async function createTodo() {
         }
     }
     
+    if (todoEndDate && todoEndDate.value.trim()) {
+        const endDateInput = todoEndDate.value.trim();
+        console.log('Criando tarefa - Data de término digitada:', endDateInput);
+        endDateValue = convertBRToISO(endDateInput);
+        console.log('Criando tarefa - Data de término convertida:', endDateValue);
+        
+        // Validar se a data é inválida
+        if (endDateValue === 'INVALID') {
+            showToast('Por favor, insira uma data de término válida no formato DD/MM/AAAA ou DD/MM/AA.', 'error');
+            todoEndDate.focus();
+            return;
+        }
+        
+        if (endDateValue === null) {
+            showToast('Formato de data de término inválido. Use DD/MM/AAAA ou DD/MM/AA.', 'error');
+            todoEndDate.focus();
+            return;
+        }
+        
+        // Validar se a data de término é posterior ou igual à data de início
+        if (dateValue && endDateValue && endDateValue < dateValue) {
+            showToast('A data de término deve ser posterior ou igual à data de início.', 'error');
+            todoEndDate.focus();
+            return;
+        }
+    }
+    
     // Verificar se a descrição excede 500 caracteres antes de enviar
     const descriptionValue = todoDescription.value.trim();
     if (descriptionValue && descriptionValue.length > 500) {
@@ -628,6 +668,7 @@ async function createTodo() {
         description: descriptionValue || null,
         priority: document.querySelector('input[name="priority"]:checked').value,
         date: dateValue,
+        end_date: endDateValue,
     };
     
     console.log('Dados do formulário antes de enviar:', formData);
@@ -701,7 +742,9 @@ async function createTodo() {
 // Atualizar tarefa
 async function updateTodo(id) {
     const todoDate = document.getElementById('todoDate');
+    const todoEndDate = document.getElementById('todoEndDate');
     let dateValue = null;
+    let endDateValue = null;
     
     if (todoDate && todoDate.value.trim()) {
         const dateInput = todoDate.value.trim();
@@ -723,11 +766,39 @@ async function updateTodo(id) {
         }
     }
     
+    if (todoEndDate && todoEndDate.value.trim()) {
+        const endDateInput = todoEndDate.value.trim();
+        console.log('Atualizando tarefa - Data de término digitada:', endDateInput);
+        endDateValue = convertBRToISO(endDateInput);
+        console.log('Atualizando tarefa - Data de término convertida:', endDateValue);
+        
+        // Validar se a data é inválida
+        if (endDateValue === 'INVALID') {
+            showToast('Por favor, insira uma data de término válida no formato DD/MM/AAAA ou DD/MM/AA.', 'error');
+            todoEndDate.focus();
+            return;
+        }
+        
+        if (endDateValue === null) {
+            showToast('Formato de data de término inválido. Use DD/MM/AAAA ou DD/MM/AA.', 'error');
+            todoEndDate.focus();
+            return;
+        }
+        
+        // Validar se a data de término é posterior ou igual à data de início
+        if (dateValue && endDateValue && endDateValue < dateValue) {
+            showToast('A data de término deve ser posterior ou igual à data de início.', 'error');
+            todoEndDate.focus();
+            return;
+        }
+    }
+    
     const formData = {
         text: todoText.value.trim(),
         description: todoDescription.value.trim() || null,
         priority: document.querySelector('input[name="priority"]:checked').value,
         date: dateValue,
+        end_date: endDateValue,
     };
     
     if (!formData.text) {
@@ -880,6 +951,16 @@ function openEditModal(id) {
         }
     }
     
+    // Preencher data de término no formato brasileiro
+    const editEndDate = document.getElementById('editTodoEndDate');
+    if (editEndDate) {
+        if (todo.end_date && todo.end_date !== null) {
+            editEndDate.value = formatDateBR(todo.end_date);
+        } else {
+            editEndDate.value = '';
+        }
+    }
+    
     // Selecionar prioridade - desmarcar todos primeiro
     const allPriorityRadios = document.querySelectorAll('input[name="editPriority"]');
     allPriorityRadios.forEach(radio => {
@@ -937,6 +1018,7 @@ async function saveEditFromModal() {
     const editText = document.getElementById('editTodoText');
     const editDescription = document.getElementById('editTodoDescription');
     const editDate = document.getElementById('editTodoDate');
+    const editEndDate = document.getElementById('editTodoEndDate');
     
     if (!editForm || !editText) return;
     
@@ -944,6 +1026,7 @@ async function saveEditFromModal() {
     if (!todoId) return;
     
     let dateValue = null;
+    let endDateValue = null;
     
     if (editDate && editDate.value.trim()) {
         const dateInput = editDate.value.trim();
@@ -970,6 +1053,37 @@ async function saveEditFromModal() {
         dateValue = null;
     }
     
+    if (editEndDate && editEndDate.value.trim()) {
+        const endDateInput = editEndDate.value.trim();
+        console.log('Salvando edição do modal - Data de término digitada:', endDateInput);
+        endDateValue = convertBRToISO(endDateInput);
+        console.log('Salvando edição do modal - Data de término convertida:', endDateValue);
+        
+        // Validar se a data é inválida
+        if (endDateValue === 'INVALID') {
+            showToast('Por favor, insira uma data de término válida no formato DD/MM/AAAA ou DD/MM/AA.', 'error');
+            editEndDate.focus();
+            return;
+        }
+        
+        if (endDateValue === null) {
+            console.error('Erro: Data de término convertida é null para input:', endDateInput);
+            showToast('Formato de data de término inválido. Use DD/MM/AAAA ou DD/MM/AA.', 'error');
+            editEndDate.focus();
+            return;
+        }
+        
+        // Validar se a data de término é posterior ou igual à data de início
+        if (dateValue && endDateValue && endDateValue < dateValue) {
+            showToast('A data de término deve ser posterior ou igual à data de início.', 'error');
+            editEndDate.focus();
+            return;
+        }
+    } else {
+        console.log('Salvando edição do modal - Campo de data de término está vazio, enviando null');
+        endDateValue = null;
+    }
+    
     // Obter prioridade selecionada ou usar a prioridade atual da tarefa
     const checkedPriority = document.querySelector('input[name="editPriority"]:checked');
     let priorityValue = checkedPriority ? checkedPriority.value : null;
@@ -991,6 +1105,7 @@ async function saveEditFromModal() {
         description: editDescription ? editDescription.value.trim() || null : null,
         priority: priorityValue,
         date: dateValue, // Pode ser null, string ISO ou 'INVALID'
+        end_date: endDateValue,
     };
     
     console.log('FormData completo antes de enviar:', JSON.stringify(formData, null, 2));
@@ -1122,7 +1237,13 @@ async function deleteTodoConfirmed(id) {
         showToast('Tarefa excluída com sucesso!', 'success');
     } catch (error) {
         console.error('Erro ao deletar tarefa:', error);
-        showToast('Erro ao deletar tarefa. Tente novamente.', 'error');
+        
+        // Verificar se é erro de autorização (403)
+        if (error.response && error.response.status === 403) {
+            showToast('Somente o dono da tarefa pode excluí-la.', 'error');
+        } else {
+            showToast('Erro ao deletar tarefa. Tente novamente.', 'error');
+        }
     }
 }
 
@@ -1138,15 +1259,61 @@ async function deleteAllCompletedConfirmed() {
     
     try {
         const deletePromises = completedTodos.map(todo => 
-            window.axios.delete(`/api/todos/${todo.id}`)
+            window.axios.delete(`/api/todos/${todo.id}`).catch(error => {
+                // Se for erro de autorização, retornar o erro para tratamento
+                if (error.response && error.response.status === 403) {
+                    return { error: 'authorization', todo: todo };
+                }
+                throw error;
+            })
         );
         
-        await Promise.all(deletePromises);
+        const results = await Promise.allSettled(deletePromises);
         
-        todos = todos.filter(t => !t.completed);
+        // Contar sucessos e erros
+        let successCount = 0;
+        let authErrorCount = 0;
+        
+        results.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                if (result.value && result.value.error === 'authorization') {
+                    authErrorCount++;
+                } else {
+                    successCount++;
+                }
+            } else {
+                // Verificar se é erro de autorização
+                if (result.reason && result.reason.response && result.reason.response.status === 403) {
+                    authErrorCount++;
+                }
+            }
+        });
+        
+        // Atualizar lista removendo apenas as tarefas deletadas com sucesso
+        todos = todos.filter(t => {
+            const wasCompleted = t.completed;
+            const todoIndex = completedTodos.findIndex(ct => ct.id === t.id);
+            if (todoIndex === -1) return true; // Não estava na lista de concluídas
+            
+            const deleteResult = results[todoIndex];
+            if (wasCompleted && deleteResult && deleteResult.status === 'fulfilled' && !deleteResult.value?.error) {
+                return false; // Remover se foi deletada com sucesso
+            }
+            return true; // Manter se não foi deletada ou teve erro
+        });
+        
         applyFilter();
         
-        showToast(`${count} tarefa${count !== 1 ? 's' : ''} concluída${count !== 1 ? 's' : ''} deletada${count !== 1 ? 's' : ''} com sucesso!`);
+        // Mostrar mensagem apropriada
+        if (authErrorCount > 0 && successCount > 0) {
+            showToast(`${successCount} tarefa(s) excluída(s). ${authErrorCount} tarefa(s) não puderam ser excluídas (somente o dono pode excluir).`, 'warning');
+        } else if (authErrorCount > 0) {
+            showToast('Somente o dono das tarefas pode excluí-las.', 'error');
+        } else if (successCount > 0) {
+            showToast(`${successCount} tarefa(s) concluída(s) deletada(s) com sucesso!`, 'success');
+        } else {
+            showToast('Erro ao deletar tarefas concluídas. Tente novamente.', 'error');
+        }
     } catch (error) {
         console.error('Erro ao deletar tarefas concluídas:', error);
         showToast('Erro ao deletar tarefas concluídas. Tente novamente.', 'error');

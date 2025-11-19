@@ -21,6 +21,11 @@ class TodoController extends Controller
         return view('todos.index');
     }
 
+    public function help(): View
+    {
+        return view('help.index');
+    }
+
     public function list(): View
     {
         return view('todos.list');
@@ -224,6 +229,7 @@ class TodoController extends Controller
         $todos = Todo::forUserOrShared()
             ->select('todos.*')
             ->selectRaw('COALESCE((SELECT MAX(created_at) FROM comments WHERE comments.todo_id = todos.id), todos.created_at) as last_activity_at')
+            ->orderByPriority()
             ->orderBy('last_activity_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -239,6 +245,125 @@ class TodoController extends Controller
     public function history(): View
     {
         return view('todos.history');
+    }
+
+    public function productivity(): View
+    {
+        $userId = auth()->id();
+
+        // Estatísticas gerais (incluindo tarefas deletadas)
+        $totalTasks = Todo::withTrashed()->where('user_id', $userId)->count();
+        $completedTasks = Todo::withTrashed()->where('user_id', $userId)->where('completed', true)->count();
+        $pendingTasks = $totalTasks - $completedTasks;
+        $completionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0;
+
+        // Tarefas por prioridade (incluindo tarefas deletadas)
+        $tasksByPriority = [
+            'simple' => Todo::withTrashed()->where('user_id', $userId)->where('priority', 'simple')->count(),
+            'medium' => Todo::withTrashed()->where('user_id', $userId)->where('priority', 'medium')->count(),
+            'urgent' => Todo::withTrashed()->where('user_id', $userId)->where('priority', 'urgent')->count(),
+        ];
+
+        // Tarefas concluídas por prioridade (incluindo tarefas deletadas)
+        $completedByPriority = [
+            'simple' => Todo::withTrashed()->where('user_id', $userId)->where('priority', 'simple')->where('completed', true)->count(),
+            'medium' => Todo::withTrashed()->where('user_id', $userId)->where('priority', 'medium')->where('completed', true)->count(),
+            'urgent' => Todo::withTrashed()->where('user_id', $userId)->where('priority', 'urgent')->where('completed', true)->count(),
+        ];
+
+        // Tarefas atrasadas (com data passada e não concluídas) - apenas não deletadas
+        $overdueTasks = Todo::where('user_id', $userId)
+            ->where('completed', false)
+            ->whereNotNull('date')
+            ->where('date', '<', now()->toDateString())
+            ->count();
+
+        // Estatísticas dos últimos 30 dias (incluindo tarefas deletadas)
+        $last30Days = now()->subDays(30);
+        $tasksCreatedLast30Days = Todo::withTrashed()->where('user_id', $userId)
+            ->where('created_at', '>=', $last30Days)
+            ->count();
+        $tasksCompletedLast30Days = Todo::withTrashed()->where('user_id', $userId)
+            ->where('completed', true)
+            ->where('updated_at', '>=', $last30Days)
+            ->count();
+
+        // Timeline dos últimos 7 dias (incluindo tarefas deletadas)
+        $timelineData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->toDateString();
+            $timelineData[] = [
+                'date' => $date,
+                'created' => Todo::withTrashed()->where('user_id', $userId)
+                    ->whereDate('created_at', $date)
+                    ->count(),
+                'completed' => Todo::withTrashed()->where('user_id', $userId)
+                    ->where('completed', true)
+                    ->whereDate('updated_at', $date)
+                    ->count(),
+            ];
+        }
+
+        // Tarefas por dia da semana (últimos 30 dias) (incluindo tarefas deletadas)
+        $tasksByDayOfWeek = [];
+        $dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        $driver = config('database.default');
+        $connection = config("database.connections.{$driver}.driver");
+
+        for ($i = 0; $i < 7; $i++) {
+            $dayOfWeek = $i; // 0=Domingo, 1=Segunda, ..., 6=Sábado (para strftime)
+
+            if ($connection === 'sqlite') {
+                // SQLite: strftime('%w', created_at) retorna 0=Domingo, 1=Segunda, ..., 6=Sábado
+                $count = Todo::withTrashed()->where('user_id', $userId)
+                    ->where('created_at', '>=', $last30Days)
+                    ->whereRaw("strftime('%w', created_at) = ?", [$dayOfWeek])
+                    ->count();
+            } else {
+                // MySQL: DAYOFWEEK retorna 1=Domingo, 2=Segunda, ..., 7=Sábado
+                $count = Todo::withTrashed()->where('user_id', $userId)
+                    ->where('created_at', '>=', $last30Days)
+                    ->whereRaw('DAYOFWEEK(created_at) = ?', [$i + 1])
+                    ->count();
+            }
+
+            $tasksByDayOfWeek[] = [
+                'day' => $dayNames[$i],
+                'count' => $count,
+            ];
+        }
+
+        // Tempo médio de conclusão (em horas) (incluindo tarefas deletadas)
+        $completedTodos = Todo::withTrashed()->where('user_id', $userId)
+            ->where('completed', true)
+            ->whereNotNull('updated_at')
+            ->get();
+
+        $totalHours = 0;
+        $count = 0;
+        foreach ($completedTodos as $todo) {
+            $hours = $todo->created_at->diffInHours($todo->updated_at);
+            if ($hours > 0) {
+                $totalHours += $hours;
+                $count++;
+            }
+        }
+        $avgTimeToComplete = $count > 0 ? round($totalHours / $count, 1) : 0;
+
+        return view('todos.productivity', [
+            'totalTasks' => $totalTasks,
+            'completedTasks' => $completedTasks,
+            'pendingTasks' => $pendingTasks,
+            'completionRate' => $completionRate,
+            'tasksByPriority' => $tasksByPriority,
+            'completedByPriority' => $completedByPriority,
+            'overdueTasks' => $overdueTasks,
+            'tasksCreatedLast30Days' => $tasksCreatedLast30Days,
+            'tasksCompletedLast30Days' => $tasksCompletedLast30Days,
+            'timelineData' => $timelineData,
+            'tasksByDayOfWeek' => $tasksByDayOfWeek,
+            'avgTimeToComplete' => $avgTimeToComplete,
+        ]);
     }
 
     public function getHistory(): JsonResponse

@@ -29,6 +29,15 @@ class UpdateTodoRequest extends FormRequest
             'priority' => ['sometimes', 'in:simple,medium,urgent'],
             'day' => ['nullable', 'string'],
             'date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', function ($attribute, $value, $fail) {
+                if ($value && $this->input('date')) {
+                    $startDate = \Carbon\Carbon::parse($this->input('date'));
+                    $endDate = \Carbon\Carbon::parse($value);
+                    if ($endDate->lt($startDate)) {
+                        $fail('A data de término deve ser posterior ou igual à data de início.');
+                    }
+                }
+            }],
             'assigned_to' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
         ];
     }
@@ -48,6 +57,11 @@ class UpdateTodoRequest extends FormRequest
         // Se date vier como string vazia, definir como null explicitamente
         if ($this->has('date') && $this->input('date') === '') {
             $this->merge(['date' => null]);
+        }
+
+        // Se end_date vier como string vazia, definir como null explicitamente
+        if ($this->has('end_date') && $this->input('end_date') === '') {
+            $this->merge(['end_date' => null]);
         }
 
         // Se assigned_to vier como string vazia ou '0', definir como null
