@@ -53,7 +53,9 @@ Tabela principal do sistema, armazena todas as tarefas criadas.
 | `completed` | boolean | Status de conclusão | Default: false |
 | `priority` | enum | Nível de prioridade | Values: 'simple', 'medium', 'urgent', Default: 'simple' |
 | `day` | string(255) | Dia da semana (legado) | Nullable |
-| `date` | date | Data específica da tarefa | Nullable |
+| `date` | date | Data de início da tarefa | Nullable |
+| `end_date` | date | Data de término da tarefa | Nullable, deve ser >= date |
+| `deleted_at` | timestamp | Data de exclusão (soft delete) | Nullable |
 | `created_at` | timestamp | Data de criação | Automático |
 | `updated_at` | timestamp | Data de atualização | Automático |
 
@@ -70,6 +72,7 @@ Tabela principal do sistema, armazena todas as tarefas criadas.
 - `description`: opcional, máximo 500 caracteres
 - `priority`: deve ser 'simple', 'medium' ou 'urgent'
 - `date`: formato válido (YYYY-MM-DD) ou DD/MM/YYYY ou DD/MM/YY
+- `end_date`: opcional, formato válido, deve ser posterior ou igual a `date`
 
 #### Relacionamentos:
 - `belongsTo` User (dono da tarefa)
@@ -192,6 +195,7 @@ Tabela padrão do Laravel para armazenar notificações do sistema.
 - `TodoOwnerEditedNotification`: Tarefa compartilhada foi editada pelo dono
 - `TodoAssignedNotification`: Tarefa foi atribuída ao usuário
 - `TodoCompletedNotification`: Tarefa atribuída foi concluída
+- `TodoDeletedNotification`: Tarefa foi excluída pelo dono (para responsáveis e usuários compartilhados)
 
 ---
 
@@ -222,6 +226,8 @@ Tabela padrão do Laravel para armazenar notificações do sistema.
 │ completed   │
 │ priority    │
 │ date        │
+│ end_date    │
+│ deleted_at  │
 │ created_at  │
 │ updated_at  │
 └─────────────┘
@@ -270,7 +276,8 @@ Tabela padrão do Laravel para armazenar notificações do sistema.
 
 ### Ordenação Padrão
 1. Prioridade (urgent → medium → simple)
-2. Data de criação (mais recentes primeiro)
+2. Data de última atividade (comentários ou criação)
+3. Data de criação (mais recentes primeiro)
 
 ### Filtros Disponíveis
 - **Todas**: Mostra todas as tarefas
@@ -288,6 +295,15 @@ Tabela padrão do Laravel para armazenar notificações do sistema.
   - A tarefa é compartilhada com eles
   - O dono edita a tarefa
   - Outro usuário com acesso edita a tarefa
+  - O dono exclui a tarefa (soft delete)
+
+### Exclusão de Tarefas
+- Tarefas são excluídas usando **Soft Delete** (não são removidas permanentemente)
+- Apenas o dono da tarefa pode excluir permanentemente
+- Tarefas deletadas são movidas para o histórico
+- Responsáveis e usuários compartilhados podem visualizar tarefas deletadas
+- Tarefas deletadas ainda contam nas estatísticas de produtividade
+- Restauração: apenas o dono pode restaurar tarefas do histórico
 
 ### Comentários
 - Ordenados por `last_activity_at` (comentário mais recente no topo)
@@ -311,6 +327,7 @@ Tabela padrão do Laravel para armazenar notificações do sistema.
   - Edição de tarefa compartilhada
   - Atribuição de tarefa
   - Conclusão de tarefa atribuída
+  - Exclusão de tarefa (para responsáveis e usuários compartilhados)
 
 ---
 
@@ -366,6 +383,29 @@ Comment::where('todo_id', $todoId)
 Comment::find($commentId)->mentions;
 ```
 
+### Buscar tarefas deletadas (histórico)
+```php
+// Apenas tarefas deletadas do usuário
+Todo::onlyTrashed()->where('user_id', $userId)->get();
+
+// Tarefas deletadas onde o usuário é dono, responsável ou compartilhado
+Todo::onlyTrashed()
+    ->where(function ($query) use ($userId) {
+        $query->where('user_id', $userId)
+            ->orWhere('assigned_to', $userId)
+            ->orWhereHas('sharedWith', function ($q) use ($userId) {
+                $q->where('users.id', $userId)
+                    ->where('todo_user.permission', 'write');
+            });
+    })
+    ->get();
+```
+
+### Buscar tarefas incluindo deletadas (para estatísticas)
+```php
+Todo::withTrashed()->where('user_id', $userId)->get();
+```
+
 ---
 
 ## 📈 Melhorias Futuras
@@ -378,15 +418,11 @@ Comment::find($commentId)->mentions;
 - Criar tabela `todo_attachments`
 - Relacionamento `hasMany` com Todo
 
-### 3. Soft Deletes
-- Adicionar `deleted_at` na tabela `todos`
-- Implementar SoftDeletes trait no modelo
-
-### 4. Histórico/Auditoria
+### 3. Histórico/Auditoria
 - Criar tabela `todo_history`
 - Registrar todas as alterações nas tarefas
 
-### 5. Reações em Comentários
+### 4. Reações em Comentários
 - Sistema de reações (like/dislike) já existe na estrutura, mas foi removido da UI
 - Pode ser reativado no futuro se necessário
 
@@ -413,5 +449,5 @@ Comment::find($commentId)->mentions;
 
 ---
 
-**Última atualização**: 2025-01-XX  
-**Versão da modelagem**: 2.0
+**Última atualização**: 2025-11-19  
+**Versão da modelagem**: 2.1

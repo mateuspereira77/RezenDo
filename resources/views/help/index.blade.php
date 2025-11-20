@@ -62,8 +62,7 @@
                 <a href="#compartilhar" class="text-[#fb9e0b] hover:text-[#fc6c04] hover:underline transition-colors">5. Compartilhar</a>
                 <a href="#comentarios" class="text-[#fb9e0b] hover:text-[#fc6c04] hover:underline transition-colors">6. Comentários</a>
                 <a href="#historico" class="text-[#fb9e0b] hover:text-[#fc6c04] hover:underline transition-colors">7. Histórico</a>
-                <a href="#produtividade" class="text-[#fb9e0b] hover:text-[#fc6c04] hover:underline transition-colors">8. Produtividade</a>
-                <a href="#dicas" class="text-[#fb9e0b] hover:text-[#fc6c04] hover:underline transition-colors">9. Dicas & Truques</a>
+                <a href="#dicas" class="text-[#fb9e0b] hover:text-[#fc6c04] hover:underline transition-colors">8. Dicas & Truques</a>
             </div>
         </div>
 
@@ -109,7 +108,6 @@
                         <li><strong>Minhas Tarefas:</strong> Visualize e gerencie todas as suas tarefas</li>
                         <li><strong>Calendário:</strong> Veja suas tarefas organizadas por data</li>
                         <li><strong>Meu Histórico:</strong> Acesse tarefas que foram deletadas</li>
-                        <li><strong>Minha Produtividade:</strong> Acompanhe suas estatísticas e gráficos</li>
                     </ul>
                 </div>
             </div>
@@ -435,70 +433,11 @@
             </div>
         </section>
 
-        <!-- Seção 8: Produtividade -->
-        <section id="produtividade" class="main-card-bg rounded-lg shadow-md p-6 sm:p-8 mb-8 scroll-mt-8">
-            <div class="flex items-center gap-3 mb-6">
-                <span class="text-4xl">📊</span>
-                <h2 class="text-3xl font-bold text-gray-800">8. Relatórios de Produtividade</h2>
-            </div>
-            
-            <div class="space-y-6">
-                <div>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-3">Acompanhe suas Estatísticas</h3>
-                    <p class="text-gray-600 mb-4">A página "Minha Produtividade" oferece insights valiosos:</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h4 class="font-semibold text-gray-700 mb-2">📈 Estatísticas Gerais</h4>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Total de tarefas</li>
-                                <li>• Tarefas concluídas</li>
-                                <li>• Tarefas pendentes</li>
-                                <li>• Taxa de conclusão</li>
-                                <li>• Tarefas atrasadas</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="bg-white p-4 rounded-lg shadow">
-                            <h4 class="font-semibold text-gray-700 mb-2">📊 Gráficos</h4>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                <li>• Timeline de criação/conclusão</li>
-                                <li>• Distribuição por prioridade</li>
-                                <li>• Produtividade por dia da semana</li>
-                                <li>• Conclusão por prioridade</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Imagem de produtividade -->
-                <div class="mb-4 text-center">
-                    @php
-                        $imagePath = public_path('images/ajuda/produtividade.png');
-                        $imageExists = file_exists($imagePath);
-                    @endphp
-                    @if($imageExists)
-                        <img src="{{ asset('images/ajuda/produtividade.png') }}" 
-                             alt="Produtividade" 
-                             class="max-w-full h-auto rounded-lg shadow-lg mx-auto">
-                    @else
-                        <div class="bg-gray-100 rounded-lg p-8 border-2 border-dashed border-gray-300 text-center">
-                            <p class="text-gray-500 mb-2">📸 <strong>Imagem: Página de Produtividade</strong></p>
-                            <p class="text-sm text-gray-400">
-                                Adicione uma screenshot da página de produtividade com gráficos aqui<br>
-                                <code class="text-xs">public/images/ajuda/produtividade.png</code>
-                            </p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </section>
-
-        <!-- Seção 9: Dicas e Truques -->
+        <!-- Seção 8: Dicas e Truques -->
         <section id="dicas" class="main-card-bg rounded-lg shadow-md p-6 sm:p-8 mb-8 scroll-mt-8">
             <div class="flex items-center gap-3 mb-6">
                 <span class="text-4xl">💡</span>
-                <h2 class="text-3xl font-bold text-gray-800">9. Dicas & Truques</h2>
+                <h2 class="text-3xl font-bold text-gray-800">8. Dicas & Truques</h2>
             </div>
             
             <div class="space-y-6">

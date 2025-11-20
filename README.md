@@ -20,6 +20,7 @@ O **RezenDo** é uma aplicação web desenvolvida para ajudar você a organizar 
 - **MySQL/PostgreSQL** - Banco de dados relacional
 
 ### Frontend
+- **Blade** - Template engine do Laravel para renderização server-side, permitindo componentes reutilizáveis, layouts dinâmicos e integração nativa com PHP
 - **Tailwind CSS** - Framework CSS utilitário para design responsivo
 - **JavaScript (Vanilla)** - Para interatividade e manipulação do DOM
 - **Axios** - Cliente HTTP para requisições AJAX
@@ -245,7 +246,7 @@ Se preferir usar Docker:
   - Fechamento de modais clicando fora (backdrop)
   - **Página de Ajuda e Tutorial**
     - Guia completo de uso da aplicação
-    - Seções organizadas: Básico, Criar Tarefas, Editar, Calendário, Compartilhar, Comentários, Histórico, Produtividade
+    - Seções organizadas: Básico, Criar Tarefas, Editar, Calendário, Compartilhar, Comentários, Histórico, Dicas & Truques
     - Suporte a imagens/screenshots para demonstração visual
     - FAQ com perguntas frequentes
     - Dicas e truques organizados por categoria
@@ -274,7 +275,6 @@ Se preferir usar Docker:
     - Tempo médio de conclusão por prioridade
     - Identificação de tarefas que demoram mais para serem concluídas
     - Gráfico de distribuição de tempo (rápidas, médias, demoradas)
-    - Análise de produtividade por horário do dia
     - Sugestões de otimização baseadas em padrões identificados
 
 - 🔔 **Notificações Avançadas**
