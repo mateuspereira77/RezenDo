@@ -10,7 +10,24 @@
 
 ## 📋 Sobre o RezenDo
 
-O **RezenDo** é uma aplicação web desenvolvida para ajudar você a organizar e gerenciar suas tarefas de forma eficiente e visualmente atraente. Com uma interface inspirada em post-its coloridos, o aplicativo oferece uma experiência única e agradável para criar, editar e acompanhar suas tarefas. O sistema inclui um calendário completo com visualização mensal e semanal, destaque de feriados, e sistema de notificações automáticas para nunca perder um prazo importante.
+O **RezenDo** é uma aplicação web **totalmente responsiva** desenvolvida para ajudar você a organizar e gerenciar suas tarefas de forma eficiente e visualmente atraente. Com uma interface inspirada em post-its coloridos, o aplicativo oferece uma experiência única e agradável para criar, editar e acompanhar suas tarefas em qualquer dispositivo - seja no desktop, tablet ou smartphone. O sistema inclui um calendário completo com visualização mensal e semanal, destaque de feriados, e sistema de notificações automáticas para nunca perder um prazo importante.
+
+### ⏱️ Tempo de Desenvolvimento
+
+O projeto foi desenvolvido em **35 horas e 5 minutos** de trabalho dedicado, utilizando as melhores práticas do ecossistema Laravel e tecnologias modernas de frontend.
+
+## 🎥 Demonstração em Vídeo
+
+<p align="center">
+  <a href="https://youtu.be/5MNWUVqOR-k" target="_blank">
+    <img src="https://img.youtube.com/vi/5MNWUVqOR-k/maxresdefault.jpg" alt="Demonstração do RezenDo" width="600">
+  </a>
+</p>
+
+<p align="center">
+  <strong>Clique na imagem acima para assistir ao vídeo de demonstração do RezenDo</strong><br>
+  <a href="https://youtu.be/5MNWUVqOR-k" target="_blank">🔗 Ver no YouTube</a>
+</p>
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -147,10 +164,13 @@ Se preferir usar Docker:
   - Exclusão em lote de tarefas concluídas
   - Mensagens de erro claras: "Somente o dono da tarefa pode excluí-la" quando não autorizado
 
-- ✅ **Interface Moderna**
+- ✅ **Interface Moderna e Totalmente Responsiva**
   - Design inspirado em post-its com rotação aleatória
   - Cores diferentes para cada nível de prioridade
-  - Layout responsivo para mobile e desktop
+  - **Layout 100% responsivo** - Funciona perfeitamente em desktop, tablet e smartphone
+  - Adaptação automática de elementos visuais para diferentes tamanhos de tela
+  - Menu e navegação otimizados para dispositivos móveis
+  - Formulários e modais adaptáveis a qualquer resolução
   - Animações suaves e transições
   - Notificações toast personalizadas
 
